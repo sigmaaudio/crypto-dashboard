@@ -102,7 +102,7 @@
       padding:8px;
     }
     .fngBox .fngLabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:4px;}
-    .fngBox img{width:100%;border-radius:6px;display:block;max-height:110px;object-fit:contain;}
+    .fngBox img{width:100%;border-radius:6px;display:block;max-height:160px;object-fit:contain;}
 
     .gWrap{display:flex;flex-direction:column;gap:3px;align-items:center;}
     .gMeta{width:100%;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;}
@@ -155,16 +155,16 @@
     .statLbl{font-size:10px;color:var(--muted);}
     .statVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
 
-    .heatmap{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+    .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
     @media (max-width:900px){
       .heatmap{grid-template-columns:repeat(5,1fr);}
       .heatTopRow{grid-template-columns:repeat(2,1fr);}
     }
     .chip{
-      border-radius:8px;padding:4px 3px;font-size:9px;
+      border-radius:8px;padding:3px 2px;font-size:9px;
       display:flex;flex-direction:column;align-items:center;gap:1px;
       border:1px solid transparent;
-      min-height:34px;
+      min-height:30px;
       justify-content:center;
       position:relative;
     }
@@ -334,7 +334,37 @@
         <div class="sentRow">
           <div class="fngBox">
             <div class="fngLabel">Crypto F&amp;G</div>
-            <img src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Crypto Fear and Greed" />
+            <div class="gWrap">
+              <svg id="cryptoFngSvg" width="100%" viewBox="0 0 200 115" style="max-width:260px;display:block;overflow:visible;">
+                <defs>
+                  <linearGradient id="arcGradCrypto" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stop-color="#e74c3c"/>
+                    <stop offset="25%"  stop-color="#ff8c42"/>
+                    <stop offset="50%"  stop-color="#f5c542"/>
+                    <stop offset="75%"  stop-color="#a8d672"/>
+                    <stop offset="100%" stop-color="#2ecc71"/>
+                  </linearGradient>
+                  <filter id="needleGlowCrypto">
+                    <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <!-- Track -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14" stroke-linecap="round"/>
+                <!-- Arc fill -->
+                <path id="cryptoArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#arcGradCrypto)" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="251" stroke-dashoffset="251" style="transition:stroke-dashoffset .8s ease"/>
+                <!-- Needle -->
+                <g id="cryptoNeedle" transform="translate(100 100) rotate(-90)" filter="url(#needleGlowCrypto)">
+                  <line x1="0" y1="0" x2="72" y2="0" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                  <circle cx="0" cy="0" r="5" fill="white"/>
+                </g>
+                <!-- Value -->
+                <text id="cryptoFngVal" x="100" y="82" text-anchor="middle" font-size="26" font-weight="800" fill="white">—</text>
+                <text id="cryptoFngLbl" x="100" y="112" text-anchor="middle" font-size="11" font-weight="600" fill="#888">laden...</text>
+              </svg>
+            </div>
+            <div style="font-size:9px;color:var(--muted);text-align:center;margin-top:2px;">alternative.me · refresh 5m</div>
           </div>
 
           <div class="fngBox">
@@ -1212,6 +1242,32 @@
 
     const localState = { cryptoFng:null, cryptoFngLabel:null, cnnFng:null, cnnFngLabel:null, bsBtc1h:null };
 
+    function setCryptoNeedle(v){
+      const cryptoArc    = document.getElementById("cryptoArc");
+      const cryptoNeedle = document.getElementById("cryptoNeedle");
+      const cryptoVal    = document.getElementById("cryptoFngVal");
+      const cryptoLbl    = document.getElementById("cryptoFngLbl");
+      if(!cryptoArc) return;
+      if(v === null){
+        cryptoArc.style.strokeDashoffset = "251";
+        if(cryptoNeedle) cryptoNeedle.setAttribute("transform","translate(100 100) rotate(-90)");
+        if(cryptoVal) cryptoVal.textContent = "—";
+        if(cryptoLbl){ cryptoLbl.textContent = "laden..."; cryptoLbl.style.fill = "#888"; }
+        return;
+      }
+      const pct   = Math.max(0, Math.min(100, v)) / 100;
+      const offset = 251 * (1 - pct);
+      const deg   = -90 + pct * 180;
+      cryptoArc.style.strokeDashoffset = offset;
+      if(cryptoNeedle) cryptoNeedle.setAttribute("transform", "translate(100 100) rotate(" + deg + ")");
+      if(cryptoVal){ cryptoVal.textContent = String(Math.round(v)); cryptoVal.style.fill = cnnLabelColor(v); }
+      if(cryptoLbl){
+        const lbl = v<=25?"Extreme Fear":v<=45?"Fear":v<=55?"Neutral":v<=75?"Greed":"Extreme Greed";
+        cryptoLbl.textContent = lbl;
+        cryptoLbl.style.fill = cnnLabelColor(v);
+      }
+    }
+
     async function refreshCryptoFngValue(){
       try{
         const j = await fetchJson("https://api.alternative.me/fng/?limit=1&format=json", 9000);
@@ -1220,9 +1276,11 @@
         const lbl = d0 && d0.value_classification ? String(d0.value_classification) : null;
         localState.cryptoFng = (v === null) ? null : Math.round(v);
         localState.cryptoFngLabel = lbl;
+        setCryptoNeedle(localState.cryptoFng);
       }catch(e){
         localState.cryptoFng = null;
         localState.cryptoFngLabel = null;
+        setCryptoNeedle(null);
       }
     }
     function buildLocalAlerts(){
