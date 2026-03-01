@@ -406,7 +406,7 @@
 
         <div class="divider"></div>
 
-        <p class="sectionTitle">Heatmap top 50 (CoinCap, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
+        <p class="sectionTitle">Heatmap top 35 (CoinCap, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
 
         <div id="winnersLosers" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;"></div>
 
@@ -468,8 +468,8 @@
     // Alerts endpoint uitgeschakeld (n8n quota op) — lokale alerts blijven werken
     const ALERTS_URL = null;
 
-    const WHALE_TRADE_USDT = 500_000;  // was 2M — verlaagd voor meer signalen
-    const MAX_WHALES = 40;
+    const WHALE_TRADE_USDT = 500_000;
+    const MAX_WHALES = 60;
 
     // Coins waarvoor we altijd aggTrade streams openen (whale detectie)
     const WHALE_SYMS = ["btcusdt","ethusdt","solusdt","bnbusdt","xrpusdt","adausdt","avaxusdt","dogeusdt"];
@@ -645,25 +645,34 @@
       updateTicker();
     }
 
-    function addWhale(sym, quoteUsdt, price, isBuyerMaker){
-      const side = isBuyerMaker ? "SELL" : "BUY";
-      whales.unshift({ts: new Date().toISOString(), sym, side, quoteUsdt, price});
+    function addWhale(sym, quoteUsdt, price, side, source){
+      // Dedup: skip als exact zelfde sym+quote+side in laatste 5s
+      const now = Date.now();
+      const isDup = whales.slice(0,5).some(w =>
+        w.sym === sym && w.source === source &&
+        Math.abs(w.quoteUsdt - quoteUsdt) < 1000 &&
+        (now - new Date(w.ts).getTime()) < 5000
+      );
+      if(isDup) return;
+      whales.unshift({ts: new Date().toISOString(), sym, side, quoteUsdt, price, source: source||"Binance"});
       if(whales.length > MAX_WHALES) whales.length = MAX_WHALES;
       renderWhales();
     }
     function renderWhales(){
       if(whales.length === 0){
-        whaleList.innerHTML = `<div class="whaleItem"><span style="color:var(--muted);font-size:11px;">Nog geen whale trades boven ${fmtCap(WHALE_TRADE_USDT)} USDT</span></div>`;
+        whaleList.innerHTML = '<div class="whaleItem"><span style="color:var(--muted);font-size:11px;">Wachten op whale trades &gt; ' + fmtCap(WHALE_TRADE_USDT) + ' USDT…</span></div>';
         return;
       }
       whaleList.innerHTML = whales.map(w=>{
-        const sev = (w.side === "BUY") ? "pos" : "neg";
-        return `
-          <div class="whaleItem">
-            <span class="whaleBadge">${w.sym.replace("USDT","")}</span>
-            <span class="whaleDetail">${w.side}, ${fmtCap(w.quoteUsdt)} USDT, prijs ${Math.round(w.price).toLocaleString()}</span>
-            <span class="whaleAmt ${sev}">${new Date(w.ts).toLocaleTimeString()}</span>
-          </div>`;
+        const sev = (w.side === "BUY" || w.side === "transfer") ? "pos" : "neg";
+        const srcColor = w.source === "WhaleAlert" ? "var(--gold)" : w.source === "Bybit" ? "var(--blue)" : w.source === "BinanceFutures" ? "#a78bfa" : "var(--muted)";
+        const symClean = w.sym.replace(/USDT$/,"").replace(/USD$/,"");
+        return '<div class="whaleItem">' +
+          '<span class="whaleBadge">' + symClean + '</span>' +
+          '<span style="font-size:9px;color:' + srcColor + ';margin-right:4px;font-weight:700;">' + w.source + '</span>' +
+          '<span class="whaleDetail">' + w.side + ' · ' + fmtCap(w.quoteUsdt) + ' USDT' + (w.price ? ' · $' + Math.round(w.price).toLocaleString() : '') + '</span>' +
+          '<span class="whaleAmt ' + sev + '">' + new Date(w.ts).toLocaleTimeString() + '</span>' +
+          '</div>';
       }).join("");
       whaleStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
     }
@@ -759,7 +768,7 @@
           const isBuyerMaker = !!data?.m;
           if(price !== null && qty !== null){
             const quote = price * qty;
-            if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, isBuyerMaker);
+            if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, isBuyerMaker ? "SELL" : "BUY", "Binance");
           }
           return;
         }
@@ -780,6 +789,167 @@
       };
       return ws;
     }
+
+    // Binance Futures aggTrade (perpetuals — grotere tickets dan spot)
+    function startBinanceFuturesWs(){
+      const futureSyms = WHALE_SYMS.map(s => s + "@aggTrade");
+      const ws = new WebSocket("wss://fstream.binance.com/stream?streams=" + futureSyms.join("/"));
+      ws.onopen = () => { wsStatusEl.textContent = wsStatusEl.textContent.replace("initializing","") + " +futures"; };
+      ws.onerror = () => {};
+      ws.onclose = () => { setTimeout(startBinanceFuturesWs, 5000); };
+      ws.onmessage = (evt)=>{
+        try{
+          const msg = JSON.parse(evt.data);
+          const data = msg.data || msg;
+          const sym = (data?.s || "").toUpperCase();
+          const price = n(data?.p);
+          const qty = n(data?.q);
+          const isBuyerMaker = !!data?.m;
+          if(sym && price !== null && qty !== null){
+            const quote = price * qty;
+            if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, isBuyerMaker ? "SELL" : "BUY", "BinanceFutures");
+          }
+        }catch(e){}
+      };
+      return ws;
+    }
+
+    // Bybit WebSocket — publieke trade stream voor top coins
+    function startBybitWs(){
+      const bybitSyms = ["BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT"];
+      const ws = new WebSocket("wss://stream.bybit.com/v5/public/linear");
+      ws.onopen = ()=>{
+        ws.send(JSON.stringify({op:"subscribe", args: bybitSyms.map(s=>"publicTrade."+s)}));
+        wsStatusEl.textContent = wsStatusEl.textContent + " +bybit";
+      };
+      ws.onerror = ()=>{};
+      ws.onclose = ()=>{ setTimeout(startBybitWs, 7000); };
+      ws.onmessage = (evt)=>{
+        try{
+          const msg = JSON.parse(evt.data);
+          if(msg.topic && msg.topic.startsWith("publicTrade") && Array.isArray(msg.data)){
+            for(const t of msg.data){
+              const sym = String(t.s||"").toUpperCase();
+              const price = n(t.p);
+              const qty = n(t.v);
+              const side = t.S === "Buy" ? "BUY" : "SELL";
+              if(price !== null && qty !== null){
+                const quote = price * qty;
+                if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, side, "Bybit");
+              }
+            }
+          }
+        }catch(e){}
+      };
+      return ws;
+    }
+
+    // ── BITQUERY on-chain whale detectie ──────────────────────────────────────
+    // Vul je Bitquery API key in na aanmaken op bitquery.io → Account → API Keys
+    const BITQUERY_KEY = "7c37b22f-9654-40a9-97e5-2f2667e3026b";
+
+    // Bekende exchange deposit wallets voor ETH labeling
+    const EXCHANGE_LABELS = {
+      "0x28c6c06298d514db089934071355e5743bf21d60": "Binance",
+      "0x21a31ee1afc51d94c2efccaa2092ad1028285549": "Binance",
+      "0xdfd5293d8e347dfe59e90efd55b2956a1343963d": "Binance",
+      "0x71660c4005ba85c37ccec55d0c4493e66fe775d3": "Coinbase",
+      "0x503828976d22510aad0201ac7ec88293211d23da": "Coinbase",
+      "0x2910543af39aba0cd09dbb2d50200b3e800a63d2": "Kraken",
+      "0x6cc5f688a315f3dc28a7781717a9a798a59fda7b": "OKX",
+      "0xf89d7b9c864f589bbf53a82105107622b35eaa40": "Bybit",
+    };
+
+    let bitqueryLastTs = new Date(Date.now() - 5*60*1000).toISOString().slice(0,19);
+
+    async function pollBitquery(){
+      if(!BITQUERY_KEY) return;
+      try{
+        const minEth = Math.floor(BITQUERY_MIN_USD / 2500);
+        const minBtc = Math.floor(BITQUERY_MIN_USD / 85000);
+
+        // ETH grote transfers
+        const ethQ = JSON.stringify({query:`{
+          ethereum(network: ethereum) {
+            transfers(
+              date: {since: "${bitqueryLastTs}"}
+              amount: {gt: ${minEth}}
+              currency: {is: "ETH"}
+              options: {limit: 50, desc: "block.height"}
+            ) {
+              block { timestamp { iso8601 } }
+              sender { address annotation }
+              receiver { address annotation }
+              amount
+              amountInUsd: amount(in: USD)
+            }
+          }
+        }`});
+
+        const r1 = await fetch("https://graphql.bitquery.io/", {
+          method:"POST",
+          headers:{"Content-Type":"application/json","X-API-KEY":BITQUERY_KEY},
+          body: ethQ
+        });
+        const j1 = await r1.json();
+        for(const tx of (j1?.data?.ethereum?.transfers||[])){
+          const usd = parseFloat(tx.amountInUsd||0);
+          if(usd < BITQUERY_MIN_USD) continue;
+          const fromAddr = (tx.sender?.address||"").toLowerCase();
+          const toAddr   = (tx.receiver?.address||"").toLowerCase();
+          const fromLabel = tx.sender?.annotation   || EXCHANGE_LABELS[fromAddr] || null;
+          const toLabel   = tx.receiver?.annotation || EXCHANGE_LABELS[toAddr]   || null;
+          let dir;
+          if(toLabel && !fromLabel)       dir = "🔴 wallet → " + toLabel;
+          else if(fromLabel && !toLabel)  dir = "🟢 " + fromLabel + " → wallet";
+          else if(fromLabel && toLabel)   dir = "↔ " + fromLabel + " → " + toLabel;
+          else continue; // beide onbekend overslaan
+          addWhale("ETHUSDT", usd, 0, dir, "Bitquery");
+        }
+
+        // BTC grote transfers via annotations (Bitquery labelt bekende exchanges)
+        const btcQ = JSON.stringify({query:`{
+          bitcoin(network: bitcoin) {
+            transfers: outputs(
+              date: {since: "${bitqueryLastTs.slice(0,10)}"}
+              outputValue: {gt: ${minBtc}}
+              options: {limit: 20, desc: "outputValue"}
+            ) {
+              block { timestamp { iso8601 } }
+              address { address annotation }
+              outputValue
+              outputValueUsd: outputValue(in: USD)
+              transaction { inputs { address { address annotation } } }
+            }
+          }
+        }`});
+
+        const r2 = await fetch("https://graphql.bitquery.io/", {
+          method:"POST",
+          headers:{"Content-Type":"application/json","X-API-KEY":BITQUERY_KEY},
+          body: btcQ
+        });
+        const j2 = await r2.json();
+        for(const tx of (j2?.data?.bitcoin?.transfers||[])){
+          const usd = parseFloat(tx.outputValueUsd||0);
+          if(usd < BITQUERY_MIN_USD) continue;
+          const toLabel   = tx.address?.annotation || null;
+          const fromLabel = tx.transaction?.inputs?.[0]?.address?.annotation || null;
+          let dir;
+          if(toLabel && !fromLabel)       dir = "🔴 wallet → " + toLabel;
+          else if(fromLabel && !toLabel)  dir = "🟢 " + fromLabel + " → wallet";
+          else if(fromLabel && toLabel)   dir = "↔ " + fromLabel + " → " + toLabel;
+          else continue;
+          addWhale("BTCUSDT", usd, 0, dir, "Bitquery");
+        }
+
+        bitqueryLastTs = new Date().toISOString().slice(0,19);
+      }catch(e){
+        dbgErr("bitquery: " + e.message);
+      }
+    }
+
+    const BITQUERY_MIN_USD = WHALE_TRADE_USDT;
 
     async function refreshBitstamp(){
       try{
@@ -926,7 +1096,7 @@
         let filtered = [];
         try{
           // Primair: CoinCap
-          const cc = await fetchJson(`${COINCAP}/assets?limit=100`, 9000);
+          const cc = await fetchJson(`${COINCAP}/assets?limit=60`, 9000);
           for(const r of (cc?.data||[])){
             if(isStableLikeSymbol(r.symbol)) continue;
             filtered.push({
@@ -936,7 +1106,7 @@
               price_change_percentage_24h: n(r.changePercent24Hr),
               market_cap: n(r.marketCapUsd)
             });
-            if(filtered.length >= 50) break;
+            if(filtered.length >= 35) break;
           }
         }catch(e){
           // Fallback: CoinGecko
@@ -944,7 +1114,7 @@
           for(const r of rows){
             if(isStableLikeSymbol(String(r.symbol||"").toUpperCase())) continue;
             filtered.push(r);
-            if(filtered.length >= 50) break;
+            if(filtered.length >= 35) break;
           }
         }
 
@@ -988,7 +1158,7 @@
       try{
         try{
           // Primair: CoinCap
-          const cc = await fetchJson(`${COINCAP}/assets?limit=100`, 9000);
+          const cc = await fetchJson(`${COINCAP}/assets?limit=60`, 9000);
           const assets = cc?.data || [];
           const totalMcap = assets.reduce((s,r)=>s+(n(r.marketCapUsd)||0), 0);
           const btc = assets.find(r=>r.id==="bitcoin");
@@ -1268,6 +1438,12 @@
         refreshAlerts();
         preloadAll();
         startBinanceWs();
+        startBinanceFuturesWs();
+        startBybitWs();
+        if(BITQUERY_KEY){
+          pollBitquery();
+          setInterval(pollBitquery, 2*60*1000); // elke 2 minuten
+        }
 
         setInterval(refreshBitstamp, 15*1000);
         setInterval(refreshBitvavo, 15*1000);
