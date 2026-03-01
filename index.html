@@ -94,22 +94,22 @@
     .miniLbl{font-size:10px;color:var(--muted);}
     .miniVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
 
-    .sentRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+    .sentRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
     .fngBox{
       background:var(--card2);
       border:1px solid var(--border);
       border-radius:12px;
-      padding:10px;
+      padding:8px;
     }
-    .fngBox .fngLabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:6px;}
-    .fngBox img{width:100%;border-radius:8px;display:block;}
+    .fngBox .fngLabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:4px;}
+    .fngBox img{width:100%;border-radius:6px;display:block;max-height:110px;object-fit:contain;}
 
-    .gWrap{display:flex;flex-direction:column;gap:8px;align-items:center;}
-    .gMeta{width:100%;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;}
-    .gBig{font-size:22px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;line-height:1;}
-    .gLbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-    .gLink{font-size:10px;color:var(--blue);text-decoration:none;}
-    .gLink:hover{text-decoration:underline;}
+    .gWrap{display:flex;flex-direction:column;gap:3px;align-items:center;}
+    .gMeta{width:100%;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:9px;}
+    .gBig{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-1px;}
+    .gLbl{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-top:1px;}
+    .gLink{font-size:9px;color:var(--blue);text-decoration:none;opacity:.7;}
+    .gLink:hover{opacity:1;text-decoration:underline;}
 
     .macroRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
     .tile{
@@ -143,21 +143,21 @@
     .statLbl{font-size:10px;color:var(--muted);}
     .statVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
 
-    .heatmap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+    .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
     @media (max-width:900px){
-      .heatmap{grid-template-columns:repeat(4,1fr);}
+      .heatmap{grid-template-columns:repeat(5,1fr);}
       .heatTopRow{grid-template-columns:repeat(2,1fr);}
     }
     .chip{
-      border-radius:10px;padding:7px 6px;font-size:10px;
-      display:flex;flex-direction:column;align-items:center;gap:2px;
+      border-radius:8px;padding:4px 3px;font-size:9px;
+      display:flex;flex-direction:column;align-items:center;gap:1px;
       border:1px solid transparent;
-      min-height:44px;
+      min-height:34px;
       justify-content:center;
       position:relative;
     }
-    .chip b{font-size:11px;font-weight:800;}
-    .chip span{font-variant-numeric:tabular-nums;font-size:10px;}
+    .chip b{font-size:10px;font-weight:800;}
+    .chip span{font-variant-numeric:tabular-nums;font-size:9px;}
     .chipPos{background:rgba(0,208,132,.12);border-color:rgba(0,208,132,.2);color:var(--green);}
     .chipNeg{background:rgba(255,77,106,.12);border-color:rgba(255,77,106,.2);color:var(--red);}
 
@@ -253,7 +253,7 @@
         <div class="btcRow">
           <div class="btcRowHead">
             <div>
-              <span class="btcEx">Bitstamp</span>
+              <span class="btcEx">Binance</span>
               <span class="btcPair">BTC/USD</span>
               <div class="btcSub" id="bsStatus">laden…</div>
             </div>
@@ -290,6 +290,16 @@
         <div class="whaleItem"><span style="color:var(--muted);font-size:11px;">Laden…</span></div>
       </div>
       <div class="status" id="whaleStatus"></div>
+
+      <div class="divider"></div>
+
+      <p class="sectionTitle">🔔 Alerts (lokaal) <span style="float:right;font-weight:400;" id="alertsStatus"></span></p>
+      <div class="alertsList" id="alerts">
+        <div class="alertItem">
+          <div class="alertDot"></div>
+          <div><div class="alertTitle" style="color:var(--muted)">Nog geen alerts</div></div>
+        </div>
+      </div>
     </div>
 
     <div class="rightGrid">
@@ -304,46 +314,61 @@
           </div>
 
           <div class="fngBox">
-            <div class="fngLabel">Stock F&amp;G (CNN), eigen gauge</div>
-
+            <div class="fngLabel">Stock F&amp;G (CNN)</div>
             <div class="gWrap">
-              <svg width="100%" viewBox="0 0 320 220" style="max-width:340px;display:block;">
-                <g transform="translate(160 160) rotate(180)">
-                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="18" stroke-linecap="round" stroke-dasharray="345 690"/>
-                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(255,77,106,0.92)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="0"/>
-                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(245,197,66,0.95)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-86"/>
-                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(245,197,66,0.95)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-172"/>
-                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(0,208,132,0.92)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-258"/>
+              <!-- Compact arc gauge: radius 70, circumference half = π*70 ≈ 220 -->
+              <svg id="cnnSvg" width="100%" viewBox="0 0 200 115" style="max-width:260px;display:block;overflow:visible;">
+                <defs>
+                  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stop-color="#ff4d6a"/>
+                    <stop offset="25%"  stop-color="#ff8c42"/>
+                    <stop offset="50%"  stop-color="#f5c542"/>
+                    <stop offset="75%"  stop-color="#a8d672"/>
+                    <stop offset="100%" stop-color="#00d084"/>
+                  </linearGradient>
+                  <filter id="needleGlow">
+                    <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Background arc track -->
+                <path d="M 20 105 A 80 80 0 0 1 180 105"
+                  fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14" stroke-linecap="round"/>
+
+                <!-- Colored arc (filled by JS up to value) -->
+                <path id="cnnArcFill" d="M 20 105 A 80 80 0 0 1 180 105"
+                  fill="none" stroke="url(#arcGrad)" stroke-width="14" stroke-linecap="round"
+                  stroke-dasharray="251 251" stroke-dashoffset="251"
+                  style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1);"/>
+
+                <!-- Zone labels -->
+                <text x="14"  y="98" font-size="8" fill="rgba(255,255,255,0.3)" text-anchor="middle" font-family="system-ui">0</text>
+                <text x="100" y="22" font-size="8" fill="rgba(255,255,255,0.3)" text-anchor="middle" font-family="system-ui">50</text>
+                <text x="186" y="98" font-size="8" fill="rgba(255,255,255,0.3)" text-anchor="middle" font-family="system-ui">100</text>
+
+                <!-- Needle -->
+                <g id="cnnNeedle" transform="translate(100 105) rotate(-90)" filter="url(#needleGlow)">
+                  <line x1="0" y1="4" x2="0" y2="-62"
+                    stroke="rgba(232,234,240,0.95)" stroke-width="2.5" stroke-linecap="round"/>
+                  <circle cx="0" cy="0" r="5" fill="var(--card)" stroke="rgba(232,234,240,0.9)" stroke-width="2"/>
                 </g>
 
-                <g id="cnnNeedle" transform="translate(160 160) rotate(-90)">
-                  <line x1="0" y1="0" x2="0" y2="-92" stroke="rgba(232,234,240,0.92)" stroke-width="3" stroke-linecap="round"/>
-                  <circle id="cnnDot" cx="0" cy="0" r="7" fill="rgba(232,234,240,0.92)" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
-                </g>
-
-                <g fill="rgba(255,255,255,0.35)" font-size="10" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial">
-                  <text x="44"  y="170" text-anchor="middle">0</text>
-                  <text x="92"  y="92"  text-anchor="middle">25</text>
-                  <text x="160" y="64"  text-anchor="middle">50</text>
-                  <text x="228" y="92"  text-anchor="middle">75</text>
-                  <text x="276" y="170" text-anchor="middle">100</text>
-                </g>
-
-                <text x="50" y="198" font-size="10" fill="rgba(255,255,255,0.5)" text-anchor="start">Fear</text>
-                <text x="270" y="198" font-size="10" fill="rgba(255,255,255,0.5)" text-anchor="end">Greed</text>
+                <!-- Center value display -->
+                <text id="cnnSvgValue" x="100" y="90" font-size="22" font-weight="900"
+                  fill="rgba(232,234,240,0.95)" text-anchor="middle" font-family="system-ui"
+                  font-variant-numeric="tabular-nums">…</text>
               </svg>
 
-              <div style="text-align:center;">
-                <div class="gBig" id="cnnValue">…</div>
-                <div class="gLbl" id="cnnLabel">laden…</div>
+              <div style="text-align:center;margin-top:-4px;">
+                <div class="gLbl" id="cnnLabel" style="color:var(--muted)">laden…</div>
               </div>
 
               <div class="gMeta">
                 <span id="cnnUpdated"></span>
-                <span>refresh, 15m</span>
+                <span>15m refresh</span>
               </div>
-
-              <a class="gLink" href="https://edition.cnn.com/markets/fear-and-greed" target="_blank">→ Bron CNN</a>
+              <a class="gLink" href="https://edition.cnn.com/markets/fear-and-greed" target="_blank">→ CNN bron</a>
             </div>
           </div>
         </div>
@@ -356,7 +381,7 @@
 
         <div class="divider"></div>
 
-        <p class="sectionTitle">Heatmap top 50 (CoinGecko, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
+        <p class="sectionTitle">Heatmap top 50 (CoinCap, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
 
         <div class="heatTopRow">
           <div class="statTile"><div class="statLbl">Green</div><div class="statVal" id="breadthGreen">…</div></div>
@@ -367,19 +392,10 @@
 
         <div class="heatmap" id="heatmap"></div>
 
-        <div class="divider"></div>
-
-        <p class="sectionTitle">Alerts (lokaal) <span style="float:right;font-weight:400;" id="alertsStatus"></span></p>
-        <div class="alertsList" id="alerts">
-          <div class="alertItem">
-            <div class="alertDot"></div>
-            <div><div class="alertTitle" style="color:var(--muted)">Nog geen alerts</div></div>
-          </div>
-        </div>
       </div>
 
       <div class="card">
-        <p class="card-title">Top 10 market cap (CoinGecko) <span class="status" id="mcStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
+        <p class="card-title">Top 10 market cap (CoinCap) <span class="status" id="mcStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
         <table>
           <thead>
             <tr>
@@ -426,13 +442,17 @@
     const BINANCE_WS = "wss://stream.binance.com:9443/stream";
     const BINANCE_REST = "https://api.binance.com";
     const COINGECKO = "https://api.coingecko.com/api/v3";
+    const COINCAP   = "https://api.coincap.io/v2";
     const CNN_FNG_JSON = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata";
 
     // Alerts endpoint uitgeschakeld (n8n quota op) — lokale alerts blijven werken
     const ALERTS_URL = null;
 
-    const WHALE_TRADE_USDT = 2_000_000;
+    const WHALE_TRADE_USDT = 500_000;  // was 2M — verlaagd voor meer signalen
     const MAX_WHALES = 40;
+
+    // Coins waarvoor we altijd aggTrade streams openen (whale detectie)
+    const WHALE_SYMS = ["btcusdt","ethusdt","solusdt","bnbusdt","xrpusdt","adausdt","avaxusdt","dogeusdt"];
 
     const WATCH = [
       "BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","ADAUSDT","DOGEUSDT","AVAXUSDT","LINKUSDT","LTCUSDT",
@@ -484,10 +504,6 @@
     const alertsStatus = document.getElementById("alertsStatus");
     const tickerLabelEl = document.getElementById("tickerLabel");
     const tickerTrack = document.getElementById("tickerTrack");
-    const cnnNeedle = document.getElementById("cnnNeedle");
-    const cnnDot = document.getElementById("cnnDot");
-    const cnnValueEl = document.getElementById("cnnValue");
-    const cnnLabelEl = document.getElementById("cnnLabel");
     const cnnUpdatedEl = document.getElementById("cnnUpdated");
 
     function dbgOk(msg){ dbgEl.textContent = msg; dbgEl.className = "dbg ok"; }
@@ -533,11 +549,29 @@
       const t = setTimeout(()=>ctl.abort(), ms);
       try{
         const res = await fetch(url, { cache:"no-store", signal: ctl.signal });
-        if(!res.ok) throw new Error(url + " -> " + res.status);
+        if(!res.ok) throw Object.assign(new Error(url + " -> " + res.status), {status: res.status});
         return await res.json();
       } finally {
         clearTimeout(t);
       }
+    }
+    // Retry met exponential backoff — specifiek voor rate-limited APIs
+    async function fetchJsonRetry(url, {retries=3, baseDelay=2000, ms=9000}={}){
+      let lastErr;
+      for(let i=0; i<retries; i++){
+        try{
+          return await fetchJson(url, ms);
+        }catch(e){
+          lastErr = e;
+          if(e.status === 429 || e.message?.includes("429")){
+            const wait = baseDelay * Math.pow(2, i) + Math.random()*500;
+            await new Promise(r=>setTimeout(r, wait));
+          } else {
+            throw e; // niet een rate-limit fout, direct gooien
+          }
+        }
+      }
+      throw lastErr;
     }
 
     const bn24 = new Map();
@@ -672,7 +706,7 @@
     }
 
     function startBinanceWs(){
-      const streams = ["!ticker@arr", ...WATCH.slice(0,6).map(s => s.toLowerCase()+"@aggTrade"), ...WATCH.map(s => s.toLowerCase()+"@kline_1m")];
+      const streams = ["!ticker@arr", ...WHALE_SYMS.map(s => s+"@aggTrade"), ...WATCH.map(s => s.toLowerCase()+"@kline_1m")];
       const ws = new WebSocket(BINANCE_WS + "?streams=" + streams.join("/"));
       ws.onopen = () => { wsStatusEl.textContent = "binance ws live"; dbgOk("ws ok"); renderWhales(); };
       ws.onclose = () => { wsStatusEl.textContent = "binance ws verbroken"; dbgErr("ws closed"); };
@@ -721,37 +755,31 @@
       return ws;
     }
 
-    async function bitstampIntervalPct(pair, stepSeconds){
-      const j = await fetchJson(`${BITSTAMP}/ohlc/${pair}/?step=${stepSeconds}&limit=2`, 9000);
-      const rows = j?.data?.ohlc;
-      if(!Array.isArray(rows) || rows.length < 2) return null;
-      const a = rows.map(r => ({ ts: n(r.timestamp), close: n(r.close) })).filter(x => x.ts!==null && x.close!==null).sort((x,y)=>x.ts-y.ts);
-      if(a.length < 2) return null;
-      const prev = a[a.length-2].close, last = a[a.length-1].close;
-      if(prev <= 0) return null;
-      return ((last - prev) / prev) * 100;
-    }
     async function refreshBitstamp(){
+      // Binance REST ipv Bitstamp (Bitstamp OHLC blokkeert CORS vanuit browser)
       try{
-        const t = await fetchJson(`${BITSTAMP}/ticker/btcusd/`, 9000);
-        const last = n(t?.last);
-        const open24 = n(t?.open);
+        // 24h ticker
+        const t = await fetchJson(`${BINANCE_REST}/api/v3/ticker/24hr?symbol=BTCUSDT`, 9000);
+        const last  = n(t?.lastPrice);
+        const open24 = n(t?.openPrice);
         let p24 = null;
         if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
 
         bsPrice.textContent = last !== null ? fmtPrice(last, "USD") : "—";
         bs24.textContent = fmtPct(p24); bs24.className = "miniVal " + clsPct(p24);
 
-        const [p1, p4] = await Promise.all([bitstampIntervalPct("btcusd", 3600), bitstampIntervalPct("btcusd", 14400)]);
+        // 1h en 4h via Binance klines
+        const p1 = pctChange("BTCUSDT", 60);
+        const p4 = pctChange("BTCUSDT", 240);
         bs1.textContent = fmtPct(p1); bs1.className = "miniVal " + clsPct(p1);
         bs4.textContent = fmtPct(p4); bs4.className = "miniVal " + clsPct(p4);
 
-        bsStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
         localState.bsBtc1h = p1;
-        dbgOk("bitstamp ok");
+        bsStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
+        dbgOk("binance ok");
       }catch(e){
         bsStatus.textContent = "error";
-        dbgErr("bitstamp fail");
+        dbgErr("binance btc fail");
       }
     }
     async function bitvavoIntervalPct(market, interval){
@@ -785,13 +813,29 @@
 
     async function refreshTop10(){
       try{
-        const rows = await fetchJson(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`, 9000);
+        let rows = [];
+        try{
+          // Primair: CoinCap (geen rate-limit)
+          const cc = await fetchJson(`${COINCAP}/assets?limit=20`, 9000);
+          rows = (cc?.data || [])
+            .filter(r => !isStableLikeSymbol(r.symbol))
+            .slice(0,10)
+            .map(r => ({
+              symbol: r.symbol,
+              current_price: n(r.priceUsd),
+              price_change_percentage_24h: n(r.changePercent24Hr),
+              market_cap: n(r.marketCapUsd)
+            }));
+        }catch(e){
+          // Fallback: CoinGecko
+          rows = await fetchJsonRetry(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`);
+        }
         mcTop10Body.innerHTML = rows.map((r,i)=>{
           const pct = n(r.price_change_percentage_24h);
           return `<tr>
             <td class="colN">${i+1}</td>
             <td class="colSym"><b>${String(r.symbol||"").toUpperCase()}</b></td>
-            <td class="colPrice">${n(r.current_price)!==null ? "$"+Number(r.current_price).toLocaleString() : "—"}</td>
+            <td class="colPrice">${n(r.current_price)!==null ? "$"+Number(r.current_price).toLocaleString(undefined,{maximumFractionDigits:4}) : "—"}</td>
             <td class="colPct ${clsPct(pct)}">${fmtPct(pct)}</td>
             <td class="colCap">${fmtCap(r.market_cap)}</td>
           </tr>`;
@@ -799,7 +843,7 @@
         mcStatus.textContent = new Date().toLocaleTimeString();
       }catch(e){
         mcStatus.textContent = "error";
-        dbgErr("coingecko top10 blocked");
+        dbgErr("top10 blocked");
       }
     }
     function median(values){
@@ -811,13 +855,29 @@
     }
     async function refreshHeatmapTop50(){
       try{
-        const rows = await fetchJson(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=160&page=1&sparkline=false&price_change_percentage=24h`, 9000);
-        const filtered = [];
-        for(const r of rows){
-          const sym = String(r.symbol||"").toUpperCase();
-          if(isStableLikeSymbol(sym)) continue;
-          filtered.push(r);
-          if(filtered.length >= 50) break;
+        let filtered = [];
+        try{
+          // Primair: CoinCap
+          const cc = await fetchJson(`${COINCAP}/assets?limit=100`, 9000);
+          for(const r of (cc?.data||[])){
+            if(isStableLikeSymbol(r.symbol)) continue;
+            filtered.push({
+              symbol: r.symbol,
+              name: r.name,
+              current_price: n(r.priceUsd),
+              price_change_percentage_24h: n(r.changePercent24Hr),
+              market_cap: n(r.marketCapUsd)
+            });
+            if(filtered.length >= 50) break;
+          }
+        }catch(e){
+          // Fallback: CoinGecko
+          const rows = await fetchJsonRetry(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=160&page=1&sparkline=false&price_change_percentage=24h`);
+          for(const r of rows){
+            if(isStableLikeSymbol(String(r.symbol||"").toUpperCase())) continue;
+            filtered.push(r);
+            if(filtered.length >= 50) break;
+          }
         }
 
         let green = 0, red = 0;
@@ -846,7 +906,6 @@
           const price = n(r.current_price);
           const cap = n(r.market_cap);
           const c = (pct !== null && pct >= 0) ? "chipPos" : "chipNeg";
-
           return `<div class="chip ${c}">
             <div class="tip">
               <div class="tipTitle">#${idx+1} ${name} (${sym})</div>
@@ -858,18 +917,30 @@
           </div>`;
         }).join("");
 
-        heatStatus.textContent = new Date().toLocaleTimeString();
+        if(filtered.length > 0) heatStatus.textContent = new Date().toLocaleTimeString();
       }catch(e){
         heatStatus.textContent = "error";
-        dbgErr("coingecko heatmap blocked");
+        dbgErr("heatmap blocked");
       }
     }
     async function refreshGlobal(){
       try{
-        const g = await fetchJson(`${COINGECKO}/global`, 9000);
-        mcapEl.textContent = fmtCap(g?.data?.total_market_cap?.usd);
-        const dom=n(g?.data?.market_cap_percentage?.btc);
-        domEl.textContent = dom!==null ? dom.toFixed(1)+"%" : "—";
+        try{
+          // Primair: CoinCap
+          const cc = await fetchJson(`${COINCAP}/assets?limit=100`, 9000);
+          const assets = cc?.data || [];
+          const totalMcap = assets.reduce((s,r)=>s+(n(r.marketCapUsd)||0), 0);
+          const btc = assets.find(r=>r.id==="bitcoin");
+          const btcMcap = btc ? (n(btc.marketCapUsd)||0) : 0;
+          mcapEl.textContent = totalMcap > 0 ? fmtCap(totalMcap) : "—";
+          domEl.textContent = (totalMcap > 0 && btcMcap > 0) ? ((btcMcap/totalMcap)*100).toFixed(1)+"%" : "—";
+        }catch(e){
+          // Fallback: CoinGecko
+          const g = await fetchJsonRetry(`${COINGECKO}/global`);
+          mcapEl.textContent = fmtCap(g?.data?.total_market_cap?.usd);
+          const dom = n(g?.data?.market_cap_percentage?.btc);
+          domEl.textContent = dom!==null ? dom.toFixed(1)+"%" : "—";
+        }
         macroStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
       }catch(e){
         macroStatus.textContent = "error";
@@ -903,7 +974,7 @@
         items.push({ts: now, severity:"warning", title:"CNN Stock F&G laag", detail:`waarde ${localState.cnnFng} (${localState.cnnFngLabel||""})`});
       }
       if(localState.bsBtc1h !== null && Math.abs(localState.bsBtc1h) >= 0.8){
-        items.push({ts: now, severity:"alert", title:"BTC (Bitstamp) 1h move ≥ 0.8%", detail:`1h ${fmtPct(localState.bsBtc1h)}`});
+        items.push({ts: now, severity:"alert", title:"BTC (Binance) 1h move ≥ 0.8%", detail:`1h ${fmtPct(localState.bsBtc1h)}`});
       }
       return items;
     }
@@ -946,28 +1017,52 @@
       if(v <= 75) return "Greed";
       return "Extreme Greed";
     }
-    function zoneColor(v){
-      if(v === null) return "rgba(232,234,240,0.92)";
-      if(v <= 25) return "rgba(255,77,106,0.92)";
-      if(v <= 55) return "rgba(245,197,66,0.95)";
-      return "rgba(0,208,132,0.92)";
+    function cnnLabelColor(v){
+      if(v === null) return "var(--muted)";
+      if(v <= 25) return "var(--red)";
+      if(v <= 45) return "#ff8c42";
+      if(v <= 55) return "var(--gold)";
+      if(v <= 75) return "#a8d672";
+      return "var(--green)";
     }
     function setNeedle(value){
       const v = n(value);
+      // Arc: -90deg = 0, +90deg = 100  → rotate = -90 + v*180/100
       const deg = (v === null) ? -90 : (-90 + (Math.max(0, Math.min(100, v)) * 180 / 100));
-      cnnNeedle.setAttribute("transform", `translate(160 160) rotate(${deg})`);
-      cnnDot.setAttribute("fill", zoneColor(v));
+      const needle = document.getElementById("cnnNeedle");
+      if(needle) needle.setAttribute("transform", `translate(100 105) rotate(${deg})`);
+
+      // Arc fill: total arc path length ≈ 251 (π * r=80)
+      const arcFill = document.getElementById("cnnArcFill");
+      if(arcFill){
+        const filled = (v === null) ? 0 : (Math.max(0, Math.min(100, v)) / 100) * 251;
+        arcFill.style.strokeDashoffset = String(251 - filled);
+      }
+
+      // Value in SVG
+      const svgVal = document.getElementById("cnnSvgValue");
+      if(svgVal) svgVal.textContent = (v === null) ? "—" : String(Math.round(v));
     }
     async function refreshCnnFng(){
       try{
         const j = await fetchJson(CNN_FNG_JSON, 9000);
-        const fg = j?.fear_and_greed || {};
-        const score = n(fg.score);
-        const label = (fg.rating && String(fg.rating).trim()) ? String(fg.rating).trim() : cnnLabelFromValue(score);
+
+        // CNN endpoint structure: j.fear_and_greed or j.fear_and_greed_historical[0]
+        const fg = j?.fear_and_greed
+          || (Array.isArray(j?.fear_and_greed_historical) ? j.fear_and_greed_historical[0] : null)
+          || {};
+
+        // score can be string or number
+        const raw = fg.score ?? fg.value ?? fg.rating_value ?? null;
+        const score = n(raw);
+
+        const ratingStr = fg.rating || fg.value_classification || null;
+        const label = (ratingStr && String(ratingStr).trim()) ? String(ratingStr).trim() : cnnLabelFromValue(score);
 
         let updatedAt = null;
-        if(fg.timestamp){
-          const d = new Date(fg.timestamp);
+        const tsRaw = fg.timestamp || fg.last_updated || null;
+        if(tsRaw){
+          const d = new Date(typeof tsRaw === "number" ? tsRaw * 1000 : tsRaw);
           updatedAt = isNaN(d.getTime()) ? null : d;
         }
 
@@ -975,16 +1070,19 @@
         localState.cnnFng = v;
         localState.cnnFngLabel = label;
 
-        cnnValueEl.textContent = (score === null) ? "—" : String(Math.round(score));
-        cnnLabelEl.textContent = (label || "—").toUpperCase();
+        const lbl = document.getElementById("cnnLabel");
+        if(lbl){
+          lbl.textContent = (label || "—").toUpperCase();
+          lbl.style.color = cnnLabelColor(v);
+        }
         cnnUpdatedEl.textContent = updatedAt ? updatedAt.toLocaleString() : "";
 
         setNeedle(score);
       }catch(e){
         localState.cnnFng = null;
         localState.cnnFngLabel = null;
-        cnnValueEl.textContent = "—";
-        cnnLabelEl.textContent = "ERROR";
+        const lbl = document.getElementById("cnnLabel");
+        if(lbl){ lbl.textContent = "ERROR"; lbl.style.color = "var(--red)"; }
         cnnUpdatedEl.textContent = "";
         setNeedle(null);
       }
@@ -996,15 +1094,20 @@
         initTicker();
         renderWhales();
 
+        // Bitstamp + Bitvavo + sentiment direct — geen rate-limit risico
         await Promise.allSettled([
           refreshBitstamp(),
           refreshBitvavo(),
-          refreshTop10(),
-          refreshGlobal(),
-          refreshHeatmapTop50(),
           refreshCryptoFngValue(),
           refreshCnnFng()
         ]);
+
+        // CoinGecko calls gespreid om rate-limiting te voorkomen
+        await refreshGlobal();
+        await new Promise(r=>setTimeout(r, 800));
+        await refreshTop10();
+        await new Promise(r=>setTimeout(r, 800));
+        await refreshHeatmapTop50();
 
         refreshAlerts();
         preloadAll();
@@ -1014,7 +1117,7 @@
         setInterval(refreshBitvavo, 15*1000);
         setInterval(refreshTop10, 5*60*1000);
         setInterval(refreshGlobal, 5*60*1000);
-        setInterval(refreshHeatmapTop50, 60*1000);
+        setInterval(refreshHeatmapTop50, 90*1000);
         setInterval(refreshCryptoFngValue, 5*60*1000);
         setInterval(refreshCnnFng, 15*60*1000);
         setInterval(refreshAlerts, 15*1000);
