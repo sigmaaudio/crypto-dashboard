@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crypto Dashboard</title>
+  <style>
+    :root{
+      --bg:#0f1117;
+      --card:#181c25;
+      --card2:#1e2433;
+      --border:rgba(255,255,255,.07);
+      --text:#e8eaf0;
+      --muted:rgba(255,255,255,.45);
+      --green:#00d084;
+      --red:#ff4d6a;
+      --blue:#4d9fff;
+      --gold:#f5c542;
+      --r:16px;
+      --shadow:0 4px 24px rgba(0,0,0,.4);
+    }
+    *{box-sizing:border-box;}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      padding:16px 16px 88px 16px;
+    }
+
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .header h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-.3px;}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .wsTag{font-size:11px;color:var(--muted);}
+
+    .layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start;}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr;}}
+    .rightGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media (max-width:1300px){.rightGrid{grid-template-columns:1fr;}}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+    .card-title{
+      font-size:11px;font-weight:700;letter-spacing:.6px;
+      text-transform:uppercase;color:var(--muted);
+      margin:0 0 12px 0;
+    }
+    .divider{height:1px;background:var(--border);margin:12px 0;}
+    .sectionTitle{
+      font-size:10px;font-weight:700;letter-spacing:.5px;
+      text-transform:uppercase;color:var(--muted);margin:0 0 8px 0;
+    }
+    .status{font-size:10px;color:var(--muted);margin-top:6px;}
+    .pos{color:var(--green);}
+    .neg{color:var(--red);}
+
+    .dbg{
+      margin-left:auto;
+      font-size:10px;
+      color:var(--muted);
+      white-space:nowrap;
+      max-width:55vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .dbg.err{color:var(--red);}
+    .dbg.ok{color:var(--green);}
+
+    .btcGrid{display:grid;grid-template-columns:1fr;gap:10px;}
+    .btcRow{
+      background:var(--card2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+    }
+    .btcRowHead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px;}
+    .btcEx{font-size:11px;font-weight:900;letter-spacing:.3px;}
+    .btcPair{font-size:10px;color:var(--muted);margin-left:6px;font-weight:700;}
+    .btcPrice{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;}
+    .btcSub{font-size:10px;color:var(--muted);margin-top:4px;}
+    .btcPctGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+    .miniTile{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:7px 8px;
+      background:rgba(255,255,255,.02);
+    }
+    .miniLbl{font-size:10px;color:var(--muted);}
+    .miniVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
+
+    .sentRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+    .fngBox{
+      background:var(--card2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px;
+    }
+    .fngBox .fngLabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:6px;}
+    .fngBox img{width:100%;border-radius:8px;display:block;}
+
+    .gWrap{display:flex;flex-direction:column;gap:8px;align-items:center;}
+    .gMeta{width:100%;display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:10px;}
+    .gBig{font-size:22px;font-weight:900;color:var(--text);font-variant-numeric:tabular-nums;line-height:1;}
+    .gLbl{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+    .gLink{font-size:10px;color:var(--blue);text-decoration:none;}
+    .gLink:hover{text-decoration:underline;}
+
+    .macroRow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .tile{
+      background:var(--card2);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 10px 8px;
+      position:relative;overflow:hidden;
+    }
+    .tile::before{
+      content:"";position:absolute;top:0;left:0;right:0;height:2px;
+      background:linear-gradient(90deg,var(--blue),transparent);
+      opacity:.5;
+    }
+    .tile .tlabel{font-size:10px;color:var(--muted);}
+    .tile .tval{font-size:12px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;}
+
+    .heatTopRow{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      margin-bottom:8px;
+    }
+    .statTile{
+      background:rgba(255,255,255,.02);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px;
+      min-height:44px;
+    }
+    .statLbl{font-size:10px;color:var(--muted);}
+    .statVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
+
+    .heatmap{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+    @media (max-width:900px){
+      .heatmap{grid-template-columns:repeat(4,1fr);}
+      .heatTopRow{grid-template-columns:repeat(2,1fr);}
+    }
+    .chip{
+      border-radius:10px;padding:7px 6px;font-size:10px;
+      display:flex;flex-direction:column;align-items:center;gap:2px;
+      border:1px solid transparent;
+      min-height:44px;
+      justify-content:center;
+      position:relative;
+    }
+    .chip b{font-size:11px;font-weight:800;}
+    .chip span{font-variant-numeric:tabular-nums;font-size:10px;}
+    .chipPos{background:rgba(0,208,132,.12);border-color:rgba(0,208,132,.2);color:var(--green);}
+    .chipNeg{background:rgba(255,77,106,.12);border-color:rgba(255,77,106,.2);color:var(--red);}
+
+    .tip{
+      position:absolute;
+      left:50%;
+      bottom:48px;
+      transform:translateX(-50%);
+      background:rgba(15,17,23,.98);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:8px 9px;
+      box-shadow:var(--shadow);
+      min-width:180px;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .12s ease;
+      color:var(--text);
+      z-index:10;
+    }
+    .chip:hover .tip{opacity:1;}
+    .tipTitle{font-weight:900;font-size:12px;}
+    .tipMeta{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.35;}
+    .tipRow{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font-size:11px;font-variant-numeric:tabular-nums;}
+
+    table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    th,td{border-bottom:1px solid var(--border);padding:5px 6px;font-size:11px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    th{font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;}
+    tr:last-child td{border-bottom:none;}
+    .colN{width:20px;}
+    .colSym{width:56px;}
+    .colPrice{width:86px;}
+    .colPct{width:58px;}
+    .colCap{width:74px;}
+
+    .alertsList{max-height:220px;overflow:auto;}
+    .alertsList::-webkit-scrollbar{width:4px;}
+    .alertsList::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+    .alertItem{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start;}
+    .alertItem:last-child{border-bottom:none;}
+    .alertDot{width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:4px;flex-shrink:0;}
+    .alertDot.warning{background:var(--gold);}
+    .alertDot.alert{background:var(--red);}
+    .alertTitle{font-weight:700;font-size:12px;}
+    .alertMeta{font-size:10px;color:var(--muted);margin-top:2px;}
+
+    .whaleItem{padding:7px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+    .whaleItem:last-child{border-bottom:none;}
+    .whaleBadge{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(245,197,66,.15);color:var(--gold);border:1px solid rgba(245,197,66,.25);white-space:nowrap;}
+    .whaleDetail{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .whaleAmt{font-size:11px;font-weight:700;white-space:nowrap;}
+
+    .ticker-wrap{
+      position:fixed;left:0;right:0;bottom:0;
+      border-top:1px solid var(--border);
+      background:rgba(15,17,23,.97);
+      backdrop-filter:blur(12px);
+      height:76px;
+      display:flex;align-items:center;
+      padding:0 12px;
+      overflow:hidden;
+    }
+    .tickerLabel{font-size:10px;color:var(--muted);margin-right:10px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+    .ticker-outer{flex:1;overflow:hidden;position:relative;}
+    .ticker-track{display:flex;width:max-content;will-change:transform;animation:ticker-marquee 70s linear infinite;}
+    .ticker-outer:hover .ticker-track{animation-play-state:paused;}
+    .ticker-set{display:inline-flex;gap:8px;align-items:stretch;}
+    @keyframes ticker-marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+    .titem{display:flex;flex-direction:column;padding:7px 11px;border:1px solid var(--border);border-radius:12px;background:var(--card2);min-width:120px;}
+    .tTop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px;}
+    .tSym{font-weight:900;font-size:12px;}
+    .tPrice{font-variant-numeric:tabular-nums;font-size:11px;color:var(--muted);}
+    .tRow{display:flex;justify-content:space-between;align-items:baseline;gap:4px;line-height:1.5;}
+    .tLbl{font-size:10px;color:var(--muted);width:22px;}
+    .tVal{font-size:11px;font-variant-numeric:tabular-nums;text-align:right;flex:1;font-weight:600;}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="dot"></div>
+    <h1>Crypto Dashboard</h1>
+    <span class="wsTag" id="wsStatus">initializing…</span>
+    <span class="dbg" id="dbg">boot…</span>
+  </div>
+
+  <div class="layout">
+
+    <div class="card">
+      <p class="card-title">BTC overzicht</p>
+
+      <div class="btcGrid">
+        <div class="btcRow">
+          <div class="btcRowHead">
+            <div>
+              <span class="btcEx">Bitstamp</span>
+              <span class="btcPair">BTC/USD</span>
+              <div class="btcSub" id="bsStatus">laden…</div>
+            </div>
+            <div class="btcPrice" id="bsPrice">…</div>
+          </div>
+          <div class="btcPctGrid">
+            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bs24">…</div></div>
+            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bs4">…</div></div>
+            <div class="miniTile"><div class="miniLbl">1h</div><div class="miniVal" id="bs1">…</div></div>
+          </div>
+        </div>
+
+        <div class="btcRow">
+          <div class="btcRowHead">
+            <div>
+              <span class="btcEx">Bitvavo</span>
+              <span class="btcPair">BTC/EUR</span>
+              <div class="btcSub" id="bvStatus">laden…</div>
+            </div>
+            <div class="btcPrice" id="bvPrice">…</div>
+          </div>
+          <div class="btcPctGrid">
+            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bv24">…</div></div>
+            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bv4">…</div></div>
+            <div class="miniTile"><div class="miniLbl">1h</div><div class="miniVal" id="bv1">…</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <p class="sectionTitle">🐋 Whale alerts, Binance trades</p>
+      <div class="alertsList" id="whaleList">
+        <div class="whaleItem"><span style="color:var(--muted);font-size:11px;">Laden…</span></div>
+      </div>
+      <div class="status" id="whaleStatus"></div>
+    </div>
+
+    <div class="rightGrid">
+
+      <div class="card">
+        <p class="card-title">Sentiment</p>
+
+        <div class="sentRow">
+          <div class="fngBox">
+            <div class="fngLabel">Crypto F&amp;G</div>
+            <img src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Crypto Fear and Greed" />
+          </div>
+
+          <div class="fngBox">
+            <div class="fngLabel">Stock F&amp;G (CNN), eigen gauge</div>
+
+            <div class="gWrap">
+              <svg width="100%" viewBox="0 0 320 220" style="max-width:340px;display:block;">
+                <g transform="translate(160 160) rotate(180)">
+                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="18" stroke-linecap="round" stroke-dasharray="345 690"/>
+                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(255,77,106,0.92)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="0"/>
+                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(245,197,66,0.95)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-86"/>
+                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(245,197,66,0.95)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-172"/>
+                  <circle r="110" cx="0" cy="0" fill="none" stroke="rgba(0,208,132,0.92)" stroke-width="18" stroke-linecap="round" stroke-dasharray="86 690" stroke-dashoffset="-258"/>
+                </g>
+
+                <g id="cnnNeedle" transform="translate(160 160) rotate(-90)">
+                  <line x1="0" y1="0" x2="0" y2="-92" stroke="rgba(232,234,240,0.92)" stroke-width="3" stroke-linecap="round"/>
+                  <circle id="cnnDot" cx="0" cy="0" r="7" fill="rgba(232,234,240,0.92)" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+                </g>
+
+                <g fill="rgba(255,255,255,0.35)" font-size="10" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial">
+                  <text x="44"  y="170" text-anchor="middle">0</text>
+                  <text x="92"  y="92"  text-anchor="middle">25</text>
+                  <text x="160" y="64"  text-anchor="middle">50</text>
+                  <text x="228" y="92"  text-anchor="middle">75</text>
+                  <text x="276" y="170" text-anchor="middle">100</text>
+                </g>
+
+                <text x="50" y="198" font-size="10" fill="rgba(255,255,255,0.5)" text-anchor="start">Fear</text>
+                <text x="270" y="198" font-size="10" fill="rgba(255,255,255,0.5)" text-anchor="end">Greed</text>
+              </svg>
+
+              <div style="text-align:center;">
+                <div class="gBig" id="cnnValue">…</div>
+                <div class="gLbl" id="cnnLabel">laden…</div>
+              </div>
+
+              <div class="gMeta">
+                <span id="cnnUpdated"></span>
+                <span>refresh, 15m</span>
+              </div>
+
+              <a class="gLink" href="https://edition.cnn.com/markets/fear-and-greed" target="_blank">→ Bron CNN</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="macroRow" style="margin-bottom:12px;">
+          <div class="tile"><div class="tlabel">Total mcap</div><div class="tval" id="mcap">…</div></div>
+          <div class="tile"><div class="tlabel">BTC dominance</div><div class="tval" id="dom">…</div></div>
+        </div>
+        <div class="status" id="macroStatus"></div>
+
+        <div class="divider"></div>
+
+        <p class="sectionTitle">Heatmap top 50 (CoinGecko, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
+
+        <div class="heatTopRow">
+          <div class="statTile"><div class="statLbl">Green</div><div class="statVal" id="breadthGreen">…</div></div>
+          <div class="statTile"><div class="statLbl">Red</div><div class="statVal" id="breadthRed">…</div></div>
+          <div class="statTile"><div class="statLbl">Avg 24h</div><div class="statVal" id="breadthAvg">…</div></div>
+          <div class="statTile"><div class="statLbl">Median 24h</div><div class="statVal" id="breadthMed">…</div></div>
+        </div>
+
+        <div class="heatmap" id="heatmap"></div>
+
+        <div class="divider"></div>
+
+        <p class="sectionTitle">Alerts (lokaal) <span style="float:right;font-weight:400;" id="alertsStatus"></span></p>
+        <div class="alertsList" id="alerts">
+          <div class="alertItem">
+            <div class="alertDot"></div>
+            <div><div class="alertTitle" style="color:var(--muted)">Nog geen alerts</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Top 10 market cap (CoinGecko) <span class="status" id="mcStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
+        <table>
+          <thead>
+            <tr>
+              <th class="colN">#</th>
+              <th class="colSym">Coin</th>
+              <th class="colPrice">Prijs</th>
+              <th class="colPct">24h%</th>
+              <th class="colCap">Mcap</th>
+            </tr>
+          </thead>
+          <tbody id="mcTop10Body"></tbody>
+        </table>
+
+        <div class="divider"></div>
+
+        <p class="sectionTitle">Top movers (Binance watch) <span class="status" id="moversStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
+        <table>
+          <thead>
+            <tr>
+              <th class="colSym">Coin</th>
+              <th class="colPrice">Prijs</th>
+              <th class="colPct">1h%</th>
+              <th class="colPct">4h%</th>
+              <th class="colPct">24h%</th>
+            </tr>
+          </thead>
+          <tbody id="moversBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ticker-wrap">
+    <span class="tickerLabel" id="tickerLabel">Live</span>
+    <div class="ticker-outer">
+      <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+  </div>
+
+  <script>
+    const BITSTAMP = "https://www.bitstamp.net/api/v2";
+    const BITVAVO  = "https://api.bitvavo.com/v2";
+    const BINANCE_WS = "wss://stream.binance.com:9443/stream";
+    const BINANCE_REST = "https://api.binance.com";
+    const COINGECKO = "https://api.coingecko.com/api/v3";
+    const CNN_FNG_JSON = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata";
+
+    // Alerts endpoint uitgeschakeld (n8n quota op) — lokale alerts blijven werken
+    const ALERTS_URL = null;
+
+    const WHALE_TRADE_USDT = 2_000_000;
+    const MAX_WHALES = 40;
+
+    const WATCH = [
+      "BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","ADAUSDT","DOGEUSDT","AVAXUSDT","LINKUSDT","LTCUSDT",
+      "TRXUSDT","DOTUSDT","MATICUSDT","TONUSDT","BCHUSDT","XLMUSDT","ATOMUSDT","ICPUSDT","FILUSDT","ETCUSDT",
+      "APTUSDT","NEARUSDT","ARBUSDT","OPUSDT","INJUSDT","RNDRUSDT","IMXUSDT","GALAUSDT","SUIUSDT","TIAUSDT"
+    ];
+
+    const STABLE_SYMBOLS = new Set([
+      "USDT","USDC","DAI","TUSD","FDUSD","USDE","USD1","USDP","BUSD","FRAX","LUSD","PYUSD","GUSD","EURC","EURT","USTC",
+      "USDS","USDF","USYC","USDG","USDX","USDD","USDJ","USDM","USDK","USDR","USDXL"
+    ]);
+    function isStableLikeSymbol(sym){
+      const s = String(sym||"").toUpperCase();
+      if(STABLE_SYMBOLS.has(s)) return true;
+      if(/^USD[A-Z0-9]{0,4}$/.test(s)) return true;
+      if(/USDT|USDC/.test(s)) return true;
+      if(s.endsWith("USD") && s.length <= 6) return true;
+      return false;
+    }
+
+    const wsStatusEl = document.getElementById("wsStatus");
+    const dbgEl = document.getElementById("dbg");
+    const bsStatus = document.getElementById("bsStatus");
+    const bsPrice  = document.getElementById("bsPrice");
+    const bs24 = document.getElementById("bs24");
+    const bs4  = document.getElementById("bs4");
+    const bs1  = document.getElementById("bs1");
+    const bvStatus = document.getElementById("bvStatus");
+    const bvPrice  = document.getElementById("bvPrice");
+    const bv24 = document.getElementById("bv24");
+    const bv4  = document.getElementById("bv4");
+    const bv1  = document.getElementById("bv1");
+    const whaleList = document.getElementById("whaleList");
+    const whaleStatus = document.getElementById("whaleStatus");
+    const mcapEl = document.getElementById("mcap");
+    const domEl = document.getElementById("dom");
+    const macroStatus = document.getElementById("macroStatus");
+    const heatmapEl = document.getElementById("heatmap");
+    const heatStatus = document.getElementById("heatStatus");
+    const breadthGreenEl = document.getElementById("breadthGreen");
+    const breadthRedEl   = document.getElementById("breadthRed");
+    const breadthAvgEl   = document.getElementById("breadthAvg");
+    const breadthMedEl   = document.getElementById("breadthMed");
+    const mcTop10Body = document.getElementById("mcTop10Body");
+    const mcStatus = document.getElementById("mcStatus");
+    const moversBody = document.getElementById("moversBody");
+    const moversStatus = document.getElementById("moversStatus");
+    const alertsEl = document.getElementById("alerts");
+    const alertsStatus = document.getElementById("alertsStatus");
+    const tickerLabelEl = document.getElementById("tickerLabel");
+    const tickerTrack = document.getElementById("tickerTrack");
+    const cnnNeedle = document.getElementById("cnnNeedle");
+    const cnnDot = document.getElementById("cnnDot");
+    const cnnValueEl = document.getElementById("cnnValue");
+    const cnnLabelEl = document.getElementById("cnnLabel");
+    const cnnUpdatedEl = document.getElementById("cnnUpdated");
+
+    function dbgOk(msg){ dbgEl.textContent = msg; dbgEl.className = "dbg ok"; }
+    function dbgErr(msg){ dbgEl.textContent = msg; dbgEl.className = "dbg err"; }
+
+    window.addEventListener("error", (e)=>dbgErr("JS error: " + (e?.message || "unknown")));
+    window.addEventListener("unhandledrejection", (e)=>dbgErr("Promise error: " + (e?.reason?.message || String(e?.reason || "unknown"))));
+
+    function n(x){ const v = Number(x); return Number.isFinite(v) ? v : null; }
+    function fmtPct(v){
+      const x = n(v);
+      if(x === null) return "—";
+      return (x >= 0 ? "+" : "") + x.toFixed(2) + "%";
+    }
+    function clsPct(v){
+      const x = n(v);
+      if(x === null) return "";
+      return x >= 0 ? "pos" : "neg";
+    }
+    function fmtPrice(v, cc){
+      const x = n(v);
+      if(x === null) return "—";
+      const dp = x >= 1000 ? 2 : x >= 100 ? 2 : x >= 1 ? 4 : 6;
+      const s = x.toLocaleString(undefined,{maximumFractionDigits:dp});
+      if(cc === "EUR") return "€" + s;
+      return "$" + s;
+    }
+    function fmtCap(v){
+      const x=n(v); if(x===null) return "";
+      if(x>=1e12) return (x/1e12).toFixed(2)+"T";
+      if(x>=1e9)  return (x/1e9).toFixed(2)+"B";
+      if(x>=1e6)  return (x/1e6).toFixed(0)+"M";
+      return Math.round(x).toLocaleString();
+    }
+    function timeAgo(ts){
+      const s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+      if(s < 60) return s + "s geleden";
+      if(s < 3600) return Math.floor(s/60) + "m geleden";
+      return Math.floor(s/3600) + "u geleden";
+    }
+    async function fetchJson(url, ms=9000){
+      const ctl = new AbortController();
+      const t = setTimeout(()=>ctl.abort(), ms);
+      try{
+        const res = await fetch(url, { cache:"no-store", signal: ctl.signal });
+        if(!res.ok) throw new Error(url + " -> " + res.status);
+        return await res.json();
+      } finally {
+        clearTimeout(t);
+      }
+    }
+
+    const bn24 = new Map();
+    const closes = new Map();
+    const whales = [];
+
+    function pushClose(sym, tMs, close){
+      const arr = closes.get(sym) || [];
+      const last = arr[arr.length - 1];
+      if(last && last.t === tMs) last.c = close; else arr.push({t:tMs,c:close});
+      const cutoff = tMs - (6*60*60*1000);
+      while(arr.length && arr[0].t < cutoff) arr.shift();
+      closes.set(sym, arr);
+    }
+    function pctChange(sym, minutesBack){
+      const arr = closes.get(sym);
+      if(!arr || arr.length < 2) return null;
+      const latest = arr[arr.length - 1];
+      const neededMs = minutesBack * 60 * 1000;
+      if(latest.t - arr[0].t < neededMs) return null;
+      const targetT = latest.t - neededMs;
+      let base = null;
+      for(let i = arr.length - 1; i >= 0; i--){ if(arr[i].t <= targetT){ base = arr[i]; break; } }
+      if(!base || base.c <= 0) return null;
+      return ((latest.c - base.c) / base.c) * 100;
+    }
+    async function preloadBinance1m(sym, limit=360){
+      const rows = await fetchJson(`${BINANCE_REST}/api/v3/klines?symbol=${encodeURIComponent(sym)}&interval=1m&limit=${limit}`, 9000);
+      if(!Array.isArray(rows)) return;
+      const now = Date.now();
+      for(const k of rows){
+        const closeT = n(k?.[6]);
+        const close  = n(k?.[4]);
+        if(closeT === null || close === null) continue;
+        if(closeT > now) continue;
+        pushClose(sym, closeT, close);
+      }
+    }
+    async function preloadAll(){
+      const syms = Array.from(new Set(["BTCUSDT", ...WATCH]));
+      for(const sym of syms){
+        try{ await preloadBinance1m(sym, 360); await new Promise(r=>setTimeout(r, 120)); }catch(e){}
+      }
+      renderMovers();
+      updateTicker();
+    }
+
+    function addWhale(sym, quoteUsdt, price, isBuyerMaker){
+      const side = isBuyerMaker ? "SELL" : "BUY";
+      whales.unshift({ts: new Date().toISOString(), sym, side, quoteUsdt, price});
+      if(whales.length > MAX_WHALES) whales.length = MAX_WHALES;
+      renderWhales();
+    }
+    function renderWhales(){
+      if(whales.length === 0){
+        whaleList.innerHTML = `<div class="whaleItem"><span style="color:var(--muted);font-size:11px;">Nog geen whale trades boven ${fmtCap(WHALE_TRADE_USDT)} USDT</span></div>`;
+        return;
+      }
+      whaleList.innerHTML = whales.map(w=>{
+        const sev = (w.side === "BUY") ? "pos" : "neg";
+        return `
+          <div class="whaleItem">
+            <span class="whaleBadge">${w.sym.replace("USDT","")}</span>
+            <span class="whaleDetail">${w.side}, ${fmtCap(w.quoteUsdt)} USDT, prijs ${Math.round(w.price).toLocaleString()}</span>
+            <span class="whaleAmt ${sev}">${new Date(w.ts).toLocaleTimeString()}</span>
+          </div>`;
+      }).join("");
+      whaleStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
+    }
+
+    function renderMovers(){
+      const rows = WATCH.map(sym=>{
+        const t = bn24.get(sym);
+        if(!t) return null;
+        const price = n(t?.c);
+        const p24 = n(t?.P);
+        const p1 = pctChange(sym, 60);
+        const p4 = pctChange(sym, 240);
+        return { sym, price, p1, p4, p24 };
+      }).filter(Boolean);
+
+      rows.sort((a,b)=>Math.abs(b.p24 ?? 0) - Math.abs(a.p24 ?? 0));
+
+      moversBody.innerHTML = rows.slice(0,10).map(r=>`
+        <tr>
+          <td><b>${r.sym.replace("USDT","")}</b></td>
+          <td>${r.price !== null ? fmtPrice(r.price,"USD") : "—"}</td>
+          <td class="${clsPct(r.p1)}">${fmtPct(r.p1)}</td>
+          <td class="${clsPct(r.p4)}">${fmtPct(r.p4)}</td>
+          <td class="${clsPct(r.p24)}">${fmtPct(r.p24)}</td>
+        </tr>`).join("");
+      moversStatus.textContent = new Date().toLocaleTimeString();
+    }
+
+    let tickerInited = false;
+    function initTicker(){
+      const items = WATCH.map(sym=>`
+        <div class="titem" data-sym="${sym}">
+          <div class="tTop">
+            <span class="tSym">${sym.replace("USDT","")}</span>
+            <span class="tPrice" data-k="price"></span>
+          </div>
+          <div class="tRow"><span class="tLbl">1h</span><span class="tVal" data-k="p1"></span></div>
+          <div class="tRow"><span class="tLbl">4h</span><span class="tVal" data-k="p4"></span></div>
+          <div class="tRow"><span class="tLbl">24h</span><span class="tVal" data-k="p24"></span></div>
+        </div>`).join("");
+      tickerTrack.innerHTML = `<div class="ticker-set">${items}</div><div class="ticker-set">${items}</div>`;
+      tickerInited = true;
+      tickerLabelEl.textContent = `Live (Binance), ${WATCH.length} items`;
+    }
+    function updateTicker(){
+      if(!tickerInited) initTicker();
+      const cards = tickerTrack.querySelectorAll(".titem");
+      cards.forEach(card=>{
+        const sym = card.getAttribute("data-sym");
+        const t = bn24.get(sym);
+        const price = n(t?.c);
+        const p24 = n(t?.P);
+        const p1 = pctChange(sym, 60);
+        const p4 = pctChange(sym, 240);
+
+        const elPrice = card.querySelector('[data-k="price"]');
+        const elP1 = card.querySelector('[data-k="p1"]');
+        const elP4 = card.querySelector('[data-k="p4"]');
+        const elP24 = card.querySelector('[data-k="p24"]');
+
+        elPrice.textContent = price !== null ? fmtPrice(price,"USD") : "";
+        elP1.textContent = fmtPct(p1); elP1.className = "tVal " + clsPct(p1);
+        elP4.textContent = fmtPct(p4); elP4.className = "tVal " + clsPct(p4);
+        elP24.textContent = fmtPct(p24); elP24.className = "tVal " + clsPct(p24);
+      });
+    }
+
+    function startBinanceWs(){
+      const streams = ["!ticker@arr", ...WATCH.slice(0,6).map(s => s.toLowerCase()+"@aggTrade"), ...WATCH.map(s => s.toLowerCase()+"@kline_1m")];
+      const ws = new WebSocket(BINANCE_WS + "?streams=" + streams.join("/"));
+      ws.onopen = () => { wsStatusEl.textContent = "binance ws live"; dbgOk("ws ok"); renderWhales(); };
+      ws.onclose = () => { wsStatusEl.textContent = "binance ws verbroken"; dbgErr("ws closed"); };
+      ws.onerror = () => { wsStatusEl.textContent = "binance ws error"; dbgErr("ws error"); };
+      ws.onmessage = (evt)=>{
+        const msg = JSON.parse(evt.data);
+        const stream = msg.stream;
+        const data = msg.data;
+
+        if(stream === "!ticker@arr" && Array.isArray(data)){
+          for(const t of data){
+            const s = String(t.s||"");
+            if(s && WATCH.includes(s)) bn24.set(s, t);
+          }
+          renderMovers();
+          updateTicker();
+          return;
+        }
+
+        if(stream.endsWith("@aggTrade")){
+          const sym = stream.split("@")[0].toUpperCase();
+          const price = n(data?.p);
+          const qty = n(data?.q);
+          const isBuyerMaker = !!data?.m;
+          if(price !== null && qty !== null){
+            const quote = price * qty;
+            if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, isBuyerMaker);
+          }
+          return;
+        }
+
+        if(stream.endsWith("@kline_1m")){
+          const sym = stream.split("@")[0].toUpperCase();
+          const k = data?.k;
+          if(k && k.x){
+            const close = n(k.c);
+            const closeT = n(k.T);
+            if(close !== null && closeT !== null){
+              pushClose(sym, closeT, close);
+              renderMovers();
+              updateTicker();
+            }
+          }
+        }
+      };
+      return ws;
+    }
+
+    async function bitstampIntervalPct(pair, stepSeconds){
+      const j = await fetchJson(`${BITSTAMP}/ohlc/${pair}/?step=${stepSeconds}&limit=2`, 9000);
+      const rows = j?.data?.ohlc;
+      if(!Array.isArray(rows) || rows.length < 2) return null;
+      const a = rows.map(r => ({ ts: n(r.timestamp), close: n(r.close) })).filter(x => x.ts!==null && x.close!==null).sort((x,y)=>x.ts-y.ts);
+      if(a.length < 2) return null;
+      const prev = a[a.length-2].close, last = a[a.length-1].close;
+      if(prev <= 0) return null;
+      return ((last - prev) / prev) * 100;
+    }
+    async function refreshBitstamp(){
+      try{
+        const t = await fetchJson(`${BITSTAMP}/ticker/btcusd/`, 9000);
+        const last = n(t?.last);
+        const open24 = n(t?.open);
+        let p24 = null;
+        if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
+
+        bsPrice.textContent = last !== null ? fmtPrice(last, "USD") : "—";
+        bs24.textContent = fmtPct(p24); bs24.className = "miniVal " + clsPct(p24);
+
+        const [p1, p4] = await Promise.all([bitstampIntervalPct("btcusd", 3600), bitstampIntervalPct("btcusd", 14400)]);
+        bs1.textContent = fmtPct(p1); bs1.className = "miniVal " + clsPct(p1);
+        bs4.textContent = fmtPct(p4); bs4.className = "miniVal " + clsPct(p4);
+
+        bsStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
+        localState.bsBtc1h = p1;
+        dbgOk("bitstamp ok");
+      }catch(e){
+        bsStatus.textContent = "error";
+        dbgErr("bitstamp fail");
+      }
+    }
+    async function bitvavoIntervalPct(market, interval){
+      const rows = await fetchJson(`${BITVAVO}/${encodeURIComponent(market)}/candles?interval=${encodeURIComponent(interval)}&limit=2`, 9000);
+      if(!Array.isArray(rows) || rows.length < 2) return null;
+      const prev = n(rows[rows.length-2]?.[4]);
+      const last = n(rows[rows.length-1]?.[4]);
+      if(prev === null || last === null || prev <= 0) return null;
+      return ((last - prev) / prev) * 100;
+    }
+    async function refreshBitvavo(){
+      try{
+        const j = await fetchJson(`${BITVAVO}/ticker/24h?market=BTC-EUR`, 9000);
+        const last = n(j?.last);
+        const open24 = n(j?.open);
+        let p24 = null;
+        if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
+
+        bvPrice.textContent = last !== null ? fmtPrice(last, "EUR") : "—";
+        bv24.textContent = fmtPct(p24); bv24.className = "miniVal " + clsPct(p24);
+
+        const [p1, p4] = await Promise.all([bitvavoIntervalPct("BTC-EUR","1h"), bitvavoIntervalPct("BTC-EUR","4h")]);
+        bv1.textContent = fmtPct(p1); bv1.className = "miniVal " + clsPct(p1);
+        bv4.textContent = fmtPct(p4); bv4.className = "miniVal " + clsPct(p4);
+
+        bvStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
+      }catch(e){
+        bvStatus.textContent = "error";
+      }
+    }
+
+    async function refreshTop10(){
+      try{
+        const rows = await fetchJson(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`, 9000);
+        mcTop10Body.innerHTML = rows.map((r,i)=>{
+          const pct = n(r.price_change_percentage_24h);
+          return `<tr>
+            <td class="colN">${i+1}</td>
+            <td class="colSym"><b>${String(r.symbol||"").toUpperCase()}</b></td>
+            <td class="colPrice">${n(r.current_price)!==null ? "$"+Number(r.current_price).toLocaleString() : "—"}</td>
+            <td class="colPct ${clsPct(pct)}">${fmtPct(pct)}</td>
+            <td class="colCap">${fmtCap(r.market_cap)}</td>
+          </tr>`;
+        }).join("");
+        mcStatus.textContent = new Date().toLocaleTimeString();
+      }catch(e){
+        mcStatus.textContent = "error";
+        dbgErr("coingecko top10 blocked");
+      }
+    }
+    function median(values){
+      const a = values.slice().sort((x,y)=>x-y);
+      const nn = a.length;
+      if(nn === 0) return null;
+      const mid = Math.floor(nn/2);
+      return (nn % 2) ? a[mid] : (a[mid-1] + a[mid]) / 2;
+    }
+    async function refreshHeatmapTop50(){
+      try{
+        const rows = await fetchJson(`${COINGECKO}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=160&page=1&sparkline=false&price_change_percentage=24h`, 9000);
+        const filtered = [];
+        for(const r of rows){
+          const sym = String(r.symbol||"").toUpperCase();
+          if(isStableLikeSymbol(sym)) continue;
+          filtered.push(r);
+          if(filtered.length >= 50) break;
+        }
+
+        let green = 0, red = 0;
+        const pcts = [];
+        for(const r of filtered){
+          const pct = n(r.price_change_percentage_24h);
+          if(pct !== null){
+            pcts.push(pct);
+            if(pct >= 0) green++; else red++;
+          }
+        }
+        const avg = pcts.length ? (pcts.reduce((a,b)=>a+b,0) / pcts.length) : null;
+        const med = median(pcts);
+
+        breadthGreenEl.textContent = String(green);
+        breadthRedEl.textContent = String(red);
+        breadthAvgEl.textContent = avg === null ? "—" : (avg >= 0 ? "+" : "") + avg.toFixed(2) + "%";
+        breadthAvgEl.className = "statVal " + (avg === null ? "" : (avg >= 0 ? "pos" : "neg"));
+        breadthMedEl.textContent = med === null ? "—" : (med >= 0 ? "+" : "") + med.toFixed(2) + "%";
+        breadthMedEl.className = "statVal " + (med === null ? "" : (med >= 0 ? "pos" : "neg"));
+
+        heatmapEl.innerHTML = filtered.map((r, idx)=>{
+          const sym = String(r.symbol||"").toUpperCase();
+          const name = String(r.name||sym);
+          const pct = n(r.price_change_percentage_24h);
+          const price = n(r.current_price);
+          const cap = n(r.market_cap);
+          const c = (pct !== null && pct >= 0) ? "chipPos" : "chipNeg";
+
+          return `<div class="chip ${c}">
+            <div class="tip">
+              <div class="tipTitle">#${idx+1} ${name} (${sym})</div>
+              <div class="tipMeta">Market cap ${cap!==null ? fmtCap(cap) : "—"} · prijs ${price!==null ? "$"+price.toLocaleString() : "—"}</div>
+              <div class="tipRow"><span>24h</span><span class="${clsPct(pct)}">${fmtPct(pct)}</span></div>
+            </div>
+            <b>${sym}</b>
+            <span>${fmtPct(pct)}</span>
+          </div>`;
+        }).join("");
+
+        heatStatus.textContent = new Date().toLocaleTimeString();
+      }catch(e){
+        heatStatus.textContent = "error";
+        dbgErr("coingecko heatmap blocked");
+      }
+    }
+    async function refreshGlobal(){
+      try{
+        const g = await fetchJson(`${COINGECKO}/global`, 9000);
+        mcapEl.textContent = fmtCap(g?.data?.total_market_cap?.usd);
+        const dom=n(g?.data?.market_cap_percentage?.btc);
+        domEl.textContent = dom!==null ? dom.toFixed(1)+"%" : "—";
+        macroStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
+      }catch(e){
+        macroStatus.textContent = "error";
+      }
+    }
+
+    const localState = { cryptoFng:null, cryptoFngLabel:null, cnnFng:null, cnnFngLabel:null, bsBtc1h:null };
+
+    async function refreshCryptoFngValue(){
+      try{
+        const j = await fetchJson("https://api.alternative.me/fng/?limit=1&format=json", 9000);
+        const d0 = Array.isArray(j?.data) ? j.data[0] : null;
+        const v = d0 ? n(d0.value) : null;
+        const lbl = d0 && d0.value_classification ? String(d0.value_classification) : null;
+        localState.cryptoFng = (v === null) ? null : Math.round(v);
+        localState.cryptoFngLabel = lbl;
+      }catch(e){
+        localState.cryptoFng = null;
+        localState.cryptoFngLabel = null;
+      }
+    }
+    function buildLocalAlerts(){
+      const items = [];
+      const now = new Date().toISOString();
+
+      if(localState.cryptoFng !== null){
+        if(localState.cryptoFng <= 15) items.push({ts: now, severity:"alert", title:"Crypto Fear & Greed ≤ 15", detail:`waarde ${localState.cryptoFng} (${localState.cryptoFngLabel||""})`});
+        else if(localState.cryptoFng <= 25) items.push({ts: now, severity:"warning", title:"Crypto Fear & Greed laag", detail:`waarde ${localState.cryptoFng} (${localState.cryptoFngLabel||""})`});
+      }
+      if(localState.cnnFng !== null && localState.cnnFng <= 25){
+        items.push({ts: now, severity:"warning", title:"CNN Stock F&G laag", detail:`waarde ${localState.cnnFng} (${localState.cnnFngLabel||""})`});
+      }
+      if(localState.bsBtc1h !== null && Math.abs(localState.bsBtc1h) >= 0.8){
+        items.push({ts: now, severity:"alert", title:"BTC (Bitstamp) 1h move ≥ 0.8%", detail:`1h ${fmtPct(localState.bsBtc1h)}`});
+      }
+      return items;
+    }
+    function renderAlerts(items){
+      if(!Array.isArray(items) || items.length===0){
+        alertsEl.innerHTML = `<div class="alertItem"><div class="alertDot"></div><div><div class="alertTitle" style="color:var(--muted)">Nog geen alerts</div></div></div>`;
+        return;
+      }
+      alertsEl.innerHTML = items.slice(0,25).map(a=>`
+        <div class="alertItem">
+          <div class="alertDot ${a.severity||""}"></div>
+          <div>
+            <div class="alertTitle">${a.title||"Alert"}</div>
+            <div class="alertMeta">${timeAgo(a.ts)}${a.detail ? " · " + a.detail : ""}</div>
+          </div>
+        </div>`).join("");
+    }
+    async function refreshAlerts(){
+      const merged = [];
+      merged.push(...buildLocalAlerts());
+      // Remote endpoint optioneel — alleen aanroepen als ALERTS_URL is ingesteld
+      if(ALERTS_URL){
+        try{
+          const res = await fetch(ALERTS_URL,{cache:"no-store"});
+          if(res.ok){
+            const json = await res.json();
+            if(Array.isArray(json.items)) merged.push(...json.items);
+          }
+        }catch(e){}
+      }
+      renderAlerts(merged);
+      alertsStatus.textContent = new Date().toLocaleTimeString();
+    }
+
+    function cnnLabelFromValue(v){
+      if(v === null) return "—";
+      if(v <= 25) return "Extreme Fear";
+      if(v <= 45) return "Fear";
+      if(v <= 55) return "Neutral";
+      if(v <= 75) return "Greed";
+      return "Extreme Greed";
+    }
+    function zoneColor(v){
+      if(v === null) return "rgba(232,234,240,0.92)";
+      if(v <= 25) return "rgba(255,77,106,0.92)";
+      if(v <= 55) return "rgba(245,197,66,0.95)";
+      return "rgba(0,208,132,0.92)";
+    }
+    function setNeedle(value){
+      const v = n(value);
+      const deg = (v === null) ? -90 : (-90 + (Math.max(0, Math.min(100, v)) * 180 / 100));
+      cnnNeedle.setAttribute("transform", `translate(160 160) rotate(${deg})`);
+      cnnDot.setAttribute("fill", zoneColor(v));
+    }
+    async function refreshCnnFng(){
+      try{
+        const j = await fetchJson(CNN_FNG_JSON, 9000);
+        const fg = j?.fear_and_greed || {};
+        const score = n(fg.score);
+        const label = (fg.rating && String(fg.rating).trim()) ? String(fg.rating).trim() : cnnLabelFromValue(score);
+
+        let updatedAt = null;
+        if(fg.timestamp){
+          const d = new Date(fg.timestamp);
+          updatedAt = isNaN(d.getTime()) ? null : d;
+        }
+
+        const v = (score === null) ? null : Math.round(score);
+        localState.cnnFng = v;
+        localState.cnnFngLabel = label;
+
+        cnnValueEl.textContent = (score === null) ? "—" : String(Math.round(score));
+        cnnLabelEl.textContent = (label || "—").toUpperCase();
+        cnnUpdatedEl.textContent = updatedAt ? updatedAt.toLocaleString() : "";
+
+        setNeedle(score);
+      }catch(e){
+        localState.cnnFng = null;
+        localState.cnnFngLabel = null;
+        cnnValueEl.textContent = "—";
+        cnnLabelEl.textContent = "ERROR";
+        cnnUpdatedEl.textContent = "";
+        setNeedle(null);
+      }
+    }
+
+    async function init(){
+      try{
+        dbgOk("init…");
+        initTicker();
+        renderWhales();
+
+        await Promise.allSettled([
+          refreshBitstamp(),
+          refreshBitvavo(),
+          refreshTop10(),
+          refreshGlobal(),
+          refreshHeatmapTop50(),
+          refreshCryptoFngValue(),
+          refreshCnnFng()
+        ]);
+
+        refreshAlerts();
+        preloadAll();
+        startBinanceWs();
+
+        setInterval(refreshBitstamp, 15*1000);
+        setInterval(refreshBitvavo, 15*1000);
+        setInterval(refreshTop10, 5*60*1000);
+        setInterval(refreshGlobal, 5*60*1000);
+        setInterval(refreshHeatmapTop50, 60*1000);
+        setInterval(refreshCryptoFngValue, 5*60*1000);
+        setInterval(refreshCnnFng, 15*60*1000);
+        setInterval(refreshAlerts, 15*1000);
+
+        dbgOk("ready");
+      }catch(e){
+        dbgErr("init failed: " + (e?.message || String(e)));
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
