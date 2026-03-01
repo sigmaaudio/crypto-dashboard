@@ -155,7 +155,7 @@
     .statLbl{font-size:10px;color:var(--muted);}
     .statVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
 
-    .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+    .heatmap{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
     @media (max-width:900px){
       .heatmap{grid-template-columns:repeat(5,1fr);}
       .heatTopRow{grid-template-columns:repeat(2,1fr);}
@@ -790,17 +790,33 @@
       return ws;
     }
 
-    // Binance Futures aggTrade (perpetuals — grotere tickets dan spot)
+    // Binance Futures aggTrade (perpetuals) + markPrice voor funding rate
     function startBinanceFuturesWs(){
       const futureSyms = WHALE_SYMS.map(s => s + "@aggTrade");
-      const ws = new WebSocket("wss://fstream.binance.com/stream?streams=" + futureSyms.join("/"));
+      // markPrice@1s geeft lastFundingRate + openInterest via stream
+      const allStreams = [...futureSyms, "btcusdt@markPrice@1s"];
+      const ws = new WebSocket("wss://fstream.binance.com/stream?streams=" + allStreams.join("/"));
       ws.onopen = () => { wsStatusEl.textContent = wsStatusEl.textContent.replace("initializing","") + " +futures"; };
       ws.onerror = () => {};
       ws.onclose = () => { setTimeout(startBinanceFuturesWs, 5000); };
       ws.onmessage = (evt)=>{
         try{
           const msg = JSON.parse(evt.data);
+          const stream = msg.stream || "";
           const data = msg.data || msg;
+
+          // markPrice stream → funding rate + OI
+          if(stream.endsWith("@markPrice@1s") || stream.endsWith("@markPrice")){
+            const rate = n(data?.r);  // lastFundingRate
+            if(rate !== null && btcFundingEl){
+              btcFundingEl.textContent = (rate * 100).toFixed(4) + "%";
+              btcFundingEl.className = "miniVal " + (rate >= 0 ? "pos" : "neg");
+            }
+            // OI niet beschikbaar in markPrice stream — gebruik separate REST eenmalig
+            return;
+          }
+
+          // aggTrade stream → whale detectie
           const sym = (data?.s || "").toUpperCase();
           const price = n(data?.p);
           const qty = n(data?.q);
@@ -812,6 +828,22 @@
         }catch(e){}
       };
       return ws;
+    }
+
+    // Open Interest eenmalig ophalen via CoinGlass (CORS-vriendelijk, gratis)
+    async function refreshOI(){
+      try{
+        // CoinGlass publieke endpoint voor BTC OI (geen key nodig)
+        const j = await fetchJson("https://open-api.coinglass.com/public/v2/open_interest?symbol=BTC", 9000);
+        const total = j?.data?.reduce((s, x) => s + (n(x?.openInterest) || 0), 0);
+        if(total && btcOIEl){
+          btcOIEl.textContent = "$" + fmtCap(total);
+          btcOIEl.className = "miniVal";
+        }
+      }catch(e){
+        // Fallback: toon n/b als OI niet bereikbaar is
+        if(btcOIEl) btcOIEl.textContent = "n/b";
+      }
     }
 
     // Bybit WebSocket — publieke trade stream voor top coins
@@ -1240,28 +1272,10 @@
       alertsStatus.textContent = new Date().toLocaleTimeString();
     }
 
-    // Funding rate + Open Interest (Binance perpetuals)
+    // Funding rate komt via startBinanceFuturesWs markPrice stream
+    // OI via refreshOI (CoinGlass)
     async function refreshFundingOI(){
-      try{
-        const [fr, oi] = await Promise.all([
-          fetchJson(`${BINANCE_REST}/fapi/v1/premiumIndex?symbol=BTCUSDT`, 9000),
-          fetchJson(`${BINANCE_REST}/fapi/v1/openInterest?symbol=BTCUSDT`, 9000)
-        ]);
-        const rate = n(fr?.lastFundingRate);
-        if(rate !== null){
-          const pct = (rate * 100).toFixed(4) + "%";
-          btcFundingEl.textContent = pct;
-          btcFundingEl.className = "miniVal " + (rate >= 0 ? "pos" : "neg");
-        }
-        const oiVal = n(oi?.openInterest);
-        const price = n(fr?.markPrice);
-        if(oiVal !== null && price !== null){
-          btcOIEl.textContent = "$" + fmtCap(oiVal * price);
-        }
-      }catch(e){
-        if(btcFundingEl) btcFundingEl.textContent = "—";
-        if(btcOIEl) btcOIEl.textContent = "—";
-      }
+      await refreshOI();
     }
 
     // Winners / Losers uit heatmap data
