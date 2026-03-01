@@ -1102,21 +1102,20 @@
       );
       const top5 = sorted.slice(0,5);
       const bot5 = sorted.slice(-5).reverse();
-      winnersLosersEl.innerHTML = `
-        <div class="wlBox">
-          <div class="wlTitle">🏆 Top 5 winners</div>
-          ${top5.map(r=>{
-            const pct = n(r.price_change_percentage_24h);
-            return `<div class="wlRow"><span class="wlSym pos">${String(r.symbol||"").toUpperCase()}</span><span class="pos">${fmtPct(pct)}</span></div>`;
-          }).join("")}
-        </div>
-        <div class="wlBox">
-          <div class="wlTitle">💀 Top 5 losers</div>
-          ${bot5.map(r=>{
-            const pct = n(r.price_change_percentage_24h);
-            return `<div class="wlRow"><span class="wlSym neg">${String(r.symbol||"").toUpperCase()}</span><span class="neg">${fmtPct(pct)}</span></div>`;
-          }).join("")}
-        </div>`;
+
+      function wlRow(r, cls){
+        const pct = n(r.price_change_percentage_24h);
+        const sym = String(r.symbol||"").toUpperCase();
+        return '<div class="wlRow"><span class="wlSym '+cls+'">'+sym+'</span><span class="'+cls+'">'+fmtPct(pct)+'</span></div>';
+      }
+
+      winnersLosersEl.innerHTML =
+        '<div class="wlBox"><div class="wlTitle">🏆 Top 5 winners</div>' +
+        top5.map(r=>wlRow(r,"pos")).join("") +
+        '</div>' +
+        '<div class="wlBox"><div class="wlTitle">💀 Top 5 losers</div>' +
+        bot5.map(r=>wlRow(r,"neg")).join("") +
+        '</div>';
     }
 
     // Econ calendar — hardcoded bekende events + gratis API als bonus
@@ -1163,6 +1162,8 @@
         if(econRowEl) econRowEl.innerHTML = "";
       }
     }
+
+    function cnnLabelFromValue(v){
       if(v === null) return "—";
       if(v <= 25) return "Extreme Fear";
       if(v <= 45) return "Fear";
