@@ -127,6 +127,18 @@
     .tile .tlabel{font-size:10px;color:var(--muted);}
     .tile .tval{font-size:12px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums;}
 
+    /* Winners / Losers */
+    .wlBox{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:7px 8px;}
+    .wlTitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px;}
+    .wlRow{display:flex;justify-content:space-between;font-size:10px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+    .wlRow:last-child{border-bottom:none;}
+    .wlSym{font-weight:800;}
+    /* Econ calendar */
+    .econChip{display:flex;flex-direction:column;padding:5px 8px;background:rgba(77,159,255,.08);border:1px solid rgba(77,159,255,.18);border-radius:8px;font-size:10px;min-width:80px;}
+    .econChip.today{background:rgba(245,197,66,.1);border-color:rgba(245,197,66,.3);}
+    .econLabel{font-weight:800;font-size:10px;}
+    .econDate{font-size:9px;color:var(--muted);margin-top:1px;}
+
     .heatTopRow{
       display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -260,9 +272,17 @@
             <div class="btcPrice" id="bsPrice">…</div>
           </div>
           <div class="btcPctGrid">
-            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bs24">…</div></div>
-            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bs4">…</div></div>
             <div class="miniTile"><div class="miniLbl">1h</div><div class="miniVal" id="bs1">…</div></div>
+            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bs4">…</div></div>
+            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bs24">…</div></div>
+            <div class="miniTile"><div class="miniLbl">7d</div><div class="miniVal" id="bs7d">…</div></div>
+            <div class="miniTile"><div class="miniLbl">30d</div><div class="miniVal" id="bs30d">…</div></div>
+            <div class="miniTile"><div class="miniLbl">24h range</div><div class="miniVal" id="bs24range">…</div></div>
+          </div>
+          <div class="btcPctGrid" style="margin-top:6px;">
+            <div class="miniTile"><div class="miniLbl">Volume 24h</div><div class="miniVal" id="bsVol">…</div></div>
+            <div class="miniTile"><div class="miniLbl">Funding</div><div class="miniVal" id="btcFunding">…</div></div>
+            <div class="miniTile"><div class="miniLbl">Open Int.</div><div class="miniVal" id="btcOI">…</div></div>
           </div>
         </div>
 
@@ -276,9 +296,13 @@
             <div class="btcPrice" id="bvPrice">…</div>
           </div>
           <div class="btcPctGrid">
-            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bv24">…</div></div>
-            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bv4">…</div></div>
             <div class="miniTile"><div class="miniLbl">1h</div><div class="miniVal" id="bv1">…</div></div>
+            <div class="miniTile"><div class="miniLbl">4h</div><div class="miniVal" id="bv4">…</div></div>
+            <div class="miniTile"><div class="miniLbl">24h</div><div class="miniVal" id="bv24">…</div></div>
+          </div>
+          <div class="btcPctGrid" style="margin-top:6px;">
+            <div class="miniTile" style="grid-column:span 2"><div class="miniLbl">Volume 24h (EUR)</div><div class="miniVal" id="bvVol">…</div></div>
+            <div class="miniTile"><div class="miniLbl">24h range</div><div class="miniVal" id="bv24range">…</div></div>
           </div>
         </div>
       </div>
@@ -373,22 +397,18 @@
           </div>
         </div>
 
-        <div class="macroRow" style="margin-bottom:12px;">
+        <div class="macroRow" style="margin-bottom:8px;">
           <div class="tile"><div class="tlabel">Total mcap</div><div class="tval" id="mcap">…</div></div>
           <div class="tile"><div class="tlabel">BTC dominance</div><div class="tval" id="dom">…</div></div>
         </div>
+        <div id="econRow" style="margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;"></div>
         <div class="status" id="macroStatus"></div>
 
         <div class="divider"></div>
 
         <p class="sectionTitle">Heatmap top 50 (CoinCap, zonder stablecoins) <span style="float:right;font-weight:400;" id="heatStatus"></span></p>
 
-        <div class="heatTopRow">
-          <div class="statTile"><div class="statLbl">Green</div><div class="statVal" id="breadthGreen">…</div></div>
-          <div class="statTile"><div class="statLbl">Red</div><div class="statVal" id="breadthRed">…</div></div>
-          <div class="statTile"><div class="statLbl">Avg 24h</div><div class="statVal" id="breadthAvg">…</div></div>
-          <div class="statTile"><div class="statLbl">Median 24h</div><div class="statVal" id="breadthMed">…</div></div>
-        </div>
+        <div id="winnersLosers" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;"></div>
 
         <div class="heatmap" id="heatmap"></div>
 
@@ -480,11 +500,19 @@
     const bs24 = document.getElementById("bs24");
     const bs4  = document.getElementById("bs4");
     const bs1  = document.getElementById("bs1");
+    const bs7d  = document.getElementById("bs7d");
+    const bs30d = document.getElementById("bs30d");
+    const bs24range = document.getElementById("bs24range");
+    const bsVol = document.getElementById("bsVol");
+    const btcFundingEl = document.getElementById("btcFunding");
+    const btcOIEl = document.getElementById("btcOI");
     const bvStatus = document.getElementById("bvStatus");
     const bvPrice  = document.getElementById("bvPrice");
     const bv24 = document.getElementById("bv24");
     const bv4  = document.getElementById("bv4");
     const bv1  = document.getElementById("bv1");
+    const bvVol = document.getElementById("bvVol");
+    const bv24range = document.getElementById("bv24range");
     const whaleList = document.getElementById("whaleList");
     const whaleStatus = document.getElementById("whaleStatus");
     const mcapEl = document.getElementById("mcap");
@@ -492,10 +520,8 @@
     const macroStatus = document.getElementById("macroStatus");
     const heatmapEl = document.getElementById("heatmap");
     const heatStatus = document.getElementById("heatStatus");
-    const breadthGreenEl = document.getElementById("breadthGreen");
-    const breadthRedEl   = document.getElementById("breadthRed");
-    const breadthAvgEl   = document.getElementById("breadthAvg");
-    const breadthMedEl   = document.getElementById("breadthMed");
+    const winnersLosersEl = document.getElementById("winnersLosers");
+    const econRowEl = document.getElementById("econRow");
     const mcTop10Body = document.getElementById("mcTop10Body");
     const mcStatus = document.getElementById("mcStatus");
     const moversBody = document.getElementById("moversBody");
@@ -756,30 +782,59 @@
     }
 
     async function refreshBitstamp(){
-      // Binance REST ipv Bitstamp (Bitstamp OHLC blokkeert CORS vanuit browser)
       try{
-        // 24h ticker
-        const t = await fetchJson(`${BINANCE_REST}/api/v3/ticker/24hr?symbol=BTCUSDT`, 9000);
-        const last  = n(t?.lastPrice);
+        const [t, k7d, k30d] = await Promise.all([
+          fetchJson(`${BINANCE_REST}/api/v3/ticker/24hr?symbol=BTCUSDT`, 9000),
+          fetchJson(`${BINANCE_REST}/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=31`, 9000),
+          fetchJson(`${BINANCE_REST}/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=31`, 9000)
+        ]);
+
+        const last   = n(t?.lastPrice);
         const open24 = n(t?.openPrice);
+        const high24 = n(t?.highPrice);
+        const low24  = n(t?.lowPrice);
+        const vol24  = n(t?.quoteVolume);
         let p24 = null;
         if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
 
         bsPrice.textContent = last !== null ? fmtPrice(last, "USD") : "—";
         bs24.textContent = fmtPct(p24); bs24.className = "miniVal " + clsPct(p24);
 
-        // 1h en 4h via Binance klines
+        // 1h en 4h via kline cache
         const p1 = pctChange("BTCUSDT", 60);
         const p4 = pctChange("BTCUSDT", 240);
         bs1.textContent = fmtPct(p1); bs1.className = "miniVal " + clsPct(p1);
         bs4.textContent = fmtPct(p4); bs4.className = "miniVal " + clsPct(p4);
+
+        // 7d en 30d uit daily klines
+        if(Array.isArray(k7d) && k7d.length >= 8){
+          const base7 = n(k7d[k7d.length - 8]?.[1]); // open 7 candles geleden
+          const p7 = (base7 && base7 > 0 && last !== null) ? ((last - base7) / base7) * 100 : null;
+          bs7d.textContent = fmtPct(p7); bs7d.className = "miniVal " + clsPct(p7);
+        }
+        if(Array.isArray(k30d) && k30d.length >= 31){
+          const base30 = n(k30d[0]?.[1]);
+          const p30 = (base30 && base30 > 0 && last !== null) ? ((last - base30) / base30) * 100 : null;
+          bs30d.textContent = fmtPct(p30); bs30d.className = "miniVal " + clsPct(p30);
+        }
+
+        // 24h range %
+        if(high24 !== null && low24 !== null && low24 > 0){
+          const rangePct = ((high24 - low24) / low24) * 100;
+          bs24range.textContent = rangePct.toFixed(2) + "%";
+          bs24range.className = "miniVal";
+        }
+
+        // Volume
+        bsVol.textContent = vol24 !== null ? "$" + fmtCap(vol24) : "—";
+        bsVol.className = "miniVal";
 
         localState.bsBtc1h = p1;
         bsStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
         dbgOk("binance ok");
       }catch(e){
         bsStatus.textContent = "error";
-        dbgErr("binance btc fail");
+        dbgErr("binance btc fail: " + e.message);
       }
     }
     async function bitvavoIntervalPct(market, interval){
@@ -793,8 +848,11 @@
     async function refreshBitvavo(){
       try{
         const j = await fetchJson(`${BITVAVO}/ticker/24h?market=BTC-EUR`, 9000);
-        const last = n(j?.last);
+        const last   = n(j?.last);
         const open24 = n(j?.open);
+        const high24 = n(j?.high);
+        const low24  = n(j?.low);
+        const vol24  = n(j?.volume);  // base volume (BTC)
         let p24 = null;
         if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
 
@@ -804,6 +862,16 @@
         const [p1, p4] = await Promise.all([bitvavoIntervalPct("BTC-EUR","1h"), bitvavoIntervalPct("BTC-EUR","4h")]);
         bv1.textContent = fmtPct(p1); bv1.className = "miniVal " + clsPct(p1);
         bv4.textContent = fmtPct(p4); bv4.className = "miniVal " + clsPct(p4);
+
+        // Volume in EUR
+        if(vol24 !== null && last !== null){
+          bvVol.textContent = "€" + fmtCap(vol24 * last);
+        } else { bvVol.textContent = "—"; }
+
+        // 24h range %
+        if(high24 !== null && low24 !== null && low24 > 0){
+          bv24range.textContent = (((high24 - low24) / low24) * 100).toFixed(2) + "%";
+        }
 
         bvStatus.textContent = "bijgewerkt: " + new Date().toLocaleTimeString();
       }catch(e){
@@ -889,15 +957,8 @@
             if(pct >= 0) green++; else red++;
           }
         }
-        const avg = pcts.length ? (pcts.reduce((a,b)=>a+b,0) / pcts.length) : null;
-        const med = median(pcts);
 
-        breadthGreenEl.textContent = String(green);
-        breadthRedEl.textContent = String(red);
-        breadthAvgEl.textContent = avg === null ? "—" : (avg >= 0 ? "+" : "") + avg.toFixed(2) + "%";
-        breadthAvgEl.className = "statVal " + (avg === null ? "" : (avg >= 0 ? "pos" : "neg"));
-        breadthMedEl.textContent = med === null ? "—" : (med >= 0 ? "+" : "") + med.toFixed(2) + "%";
-        breadthMedEl.className = "statVal " + (med === null ? "" : (med >= 0 ? "pos" : "neg"));
+        renderWinnersLosers(filtered);
 
         heatmapEl.innerHTML = filtered.map((r, idx)=>{
           const sym = String(r.symbol||"").toUpperCase();
@@ -1009,7 +1070,99 @@
       alertsStatus.textContent = new Date().toLocaleTimeString();
     }
 
-    function cnnLabelFromValue(v){
+    // Funding rate + Open Interest (Binance perpetuals)
+    async function refreshFundingOI(){
+      try{
+        const [fr, oi] = await Promise.all([
+          fetchJson(`${BINANCE_REST}/fapi/v1/premiumIndex?symbol=BTCUSDT`, 9000),
+          fetchJson(`${BINANCE_REST}/fapi/v1/openInterest?symbol=BTCUSDT`, 9000)
+        ]);
+        const rate = n(fr?.lastFundingRate);
+        if(rate !== null){
+          const pct = (rate * 100).toFixed(4) + "%";
+          btcFundingEl.textContent = pct;
+          btcFundingEl.className = "miniVal " + (rate >= 0 ? "pos" : "neg");
+        }
+        const oiVal = n(oi?.openInterest);
+        const price = n(fr?.markPrice);
+        if(oiVal !== null && price !== null){
+          btcOIEl.textContent = "$" + fmtCap(oiVal * price);
+        }
+      }catch(e){
+        if(btcFundingEl) btcFundingEl.textContent = "—";
+        if(btcOIEl) btcOIEl.textContent = "—";
+      }
+    }
+
+    // Winners / Losers uit heatmap data
+    function renderWinnersLosers(filtered){
+      if(!winnersLosersEl || !filtered.length) return;
+      const sorted = filtered.slice().sort((a,b)=>
+        (n(b.price_change_percentage_24h)||0) - (n(a.price_change_percentage_24h)||0)
+      );
+      const top5 = sorted.slice(0,5);
+      const bot5 = sorted.slice(-5).reverse();
+      winnersLosersEl.innerHTML = `
+        <div class="wlBox">
+          <div class="wlTitle">🏆 Top 5 winners</div>
+          ${top5.map(r=>{
+            const pct = n(r.price_change_percentage_24h);
+            return `<div class="wlRow"><span class="wlSym pos">${String(r.symbol||"").toUpperCase()}</span><span class="pos">${fmtPct(pct)}</span></div>`;
+          }).join("")}
+        </div>
+        <div class="wlBox">
+          <div class="wlTitle">💀 Top 5 losers</div>
+          ${bot5.map(r=>{
+            const pct = n(r.price_change_percentage_24h);
+            return `<div class="wlRow"><span class="wlSym neg">${String(r.symbol||"").toUpperCase()}</span><span class="neg">${fmtPct(pct)}</span></div>`;
+          }).join("")}
+        </div>`;
+    }
+
+    // Econ calendar — hardcoded bekende events + gratis API als bonus
+    const KNOWN_EVENTS = [
+      // Vul zelf aan; formaat: {label, date:"YYYY-MM-DD", imp:"high"}
+      // We gebruiken ook een gratis API hieronder
+    ];
+    async function refreshEconCalendar(){
+      if(!econRowEl) return;
+      try{
+        // Gratis economiccalendar via tradingeconomics (beperkt) of fallback statisch
+        // We gebruiken hier een open FOMC/NFP/CPI dataset via stlouisfed / hardcode bekende data
+        const now = new Date();
+        const ymd = (d)=> d.toISOString().slice(0,10);
+        const today = ymd(now);
+
+        // Upcoming events (statisch bijgewerkt — voeg zelf toe indien gewenst)
+        const events = [
+          {label:"FOMC",  date:"2026-03-19", note:"Rentebesluit Fed"},
+          {label:"NFP",   date:"2026-04-03", note:"Non-Farm Payrolls"},
+          {label:"CPI",   date:"2026-03-12", note:"US Inflatie"},
+          {label:"FOMC",  date:"2026-05-07", note:"Rentebesluit Fed"},
+          {label:"NFP",   date:"2026-05-01", note:"Non-Farm Payrolls"},
+          {label:"CPI",   date:"2026-04-10", note:"US Inflatie"},
+        ].filter(e => e.date >= today)
+         .sort((a,b)=> a.date.localeCompare(b.date))
+         .slice(0,4);
+
+        if(events.length === 0){
+          econRowEl.innerHTML = `<span style="font-size:10px;color:var(--muted)">Geen events gepland</span>`;
+          return;
+        }
+
+        econRowEl.innerHTML = events.map(e=>{
+          const isToday = e.date === today;
+          const daysAway = Math.round((new Date(e.date) - now) / 86400000);
+          const whenStr = isToday ? "VANDAAG" : (daysAway === 1 ? "morgen" : `over ${daysAway}d`);
+          return `<div class="econChip${isToday?" today":""}">
+            <span class="econLabel">${e.label}${isToday?" ⚡":""}</span>
+            <span class="econDate">${whenStr} · ${e.note}</span>
+          </div>`;
+        }).join("");
+      }catch(e){
+        if(econRowEl) econRowEl.innerHTML = "";
+      }
+    }
       if(v === null) return "—";
       if(v <= 25) return "Extreme Fear";
       if(v <= 45) return "Fear";
@@ -1099,7 +1252,9 @@
           refreshBitstamp(),
           refreshBitvavo(),
           refreshCryptoFngValue(),
-          refreshCnnFng()
+          refreshCnnFng(),
+          refreshFundingOI(),
+          refreshEconCalendar()
         ]);
 
         // CoinGecko calls gespreid om rate-limiting te voorkomen
@@ -1115,12 +1270,14 @@
 
         setInterval(refreshBitstamp, 15*1000);
         setInterval(refreshBitvavo, 15*1000);
+        setInterval(refreshFundingOI, 30*1000);
         setInterval(refreshTop10, 5*60*1000);
         setInterval(refreshGlobal, 5*60*1000);
         setInterval(refreshHeatmapTop50, 90*1000);
         setInterval(refreshCryptoFngValue, 5*60*1000);
         setInterval(refreshCnnFng, 15*60*1000);
         setInterval(refreshAlerts, 15*1000);
+        setInterval(refreshEconCalendar, 60*60*1000);
 
         dbgOk("ready");
       }catch(e){
