@@ -155,27 +155,6 @@
     .statLbl{font-size:10px;color:var(--muted);}
     .statVal{font-size:12px;font-weight:900;margin-top:2px;font-variant-numeric:tabular-nums;}
 
-    /* Correlation chips */
-    .corrChip{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:5px 4px;text-align:center;}
-    .corrSym{font-size:10px;font-weight:800;display:block;}
-    .corrVal{font-size:10px;display:block;margin-top:2px;}
-    /* Sector tiles */
-    .sectorTile{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;}
-    .sectorName{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
-    .sectorPct{font-size:13px;font-weight:800;margin-top:2px;}
-    .sectorCoins{font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    /* Stablecoin tiles */
-    .stableTile{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;}
-    .stableSym{font-size:10px;font-weight:800;}
-    .stableMcap{font-size:11px;font-weight:700;margin-top:2px;}
-    .stableFlow{font-size:10px;margin-top:1px;}
-    /* Liquidation */
-    .liqRow{display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:10px;}
-    .liqLevel{width:72px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;}
-    .liqBarWrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
-    .liqBarFill{height:5px;border-radius:3px;}
-    .liqAmt{width:52px;font-size:9px;color:var(--muted);}
-
     .heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
     @media (max-width:900px){
       .heatmap{grid-template-columns:repeat(5,1fr);}
@@ -345,21 +324,6 @@
           <div><div class="alertTitle" style="color:var(--muted)">Nog geen alerts</div></div>
         </div>
       </div>
-      <div class="divider"></div>
-
-      <p class="sectionTitle">📈 BTC dominantie 7d <span style="float:right;font-weight:400;font-size:10px;" id="domSparkStatus"></span></p>
-      <div style="padding:4px 0 2px;">
-        <svg id="domSparkSvg" width="100%" height="36" style="display:block;"></svg>
-      </div>
-
-      <div class="divider"></div>
-
-      <p class="sectionTitle">😰 Crypto F&amp;G trend 7d <span style="float:right;" id="fngTrendArrow" style="font-size:14px;"></span></p>
-      <div style="padding:4px 0 2px;">
-        <svg id="fngSparkSvg" width="100%" height="36" style="display:block;"></svg>
-      </div>
-      <div id="fngTrendLabel" style="font-size:10px;color:var(--muted);text-align:center;margin-top:2px;"></div>
-
     </div>
 
     <div class="rightGrid">
@@ -510,27 +474,6 @@
           </thead>
           <tbody id="moversBody"></tbody>
         </table>
-
-        <div class="divider"></div>
-
-        <p class="sectionTitle">🔗 BTC correlatie (1h moves) <span class="status" id="corrStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
-        <div id="corrBody" style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:4px;"></div>
-
-        <div class="divider"></div>
-
-        <p class="sectionTitle">🏭 Sector performance (24h) <span class="status" id="sectorStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
-        <div id="sectorBody" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px;"></div>
-
-        <div class="divider"></div>
-
-        <p class="sectionTitle">💵 Stablecoin flows (24h) <span class="status" id="stableStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
-        <div id="stableBody" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:4px;"></div>
-
-        <div class="divider"></div>
-
-        <p class="sectionTitle">💥 BTC liquidatie niveaus <span class="status" id="liqStatus" style="float:right;text-transform:none;letter-spacing:0;"></span></p>
-        <div id="liqBody" style="margin-top:4px;"></div>
-
       </div>
 
     </div>
@@ -609,19 +552,6 @@
     const heatStatus = document.getElementById("heatStatus");
     const winnersLosersEl = document.getElementById("winnersLosers");
     const econRowEl = document.getElementById("econRow");
-    const corrBody = document.getElementById("corrBody");
-    const corrStatus = document.getElementById("corrStatus");
-    const sectorBody = document.getElementById("sectorBody");
-    const sectorStatus = document.getElementById("sectorStatus");
-    const stableBody = document.getElementById("stableBody");
-    const stableStatus = document.getElementById("stableStatus");
-    const liqBody = document.getElementById("liqBody");
-    const liqStatus = document.getElementById("liqStatus");
-    const domSparkSvg = document.getElementById("domSparkSvg");
-    const domSparkStatus = document.getElementById("domSparkStatus");
-    const fngSparkSvg = document.getElementById("fngSparkSvg");
-    const fngTrendArrow = document.getElementById("fngTrendArrow");
-    const fngTrendLabel = document.getElementById("fngTrendLabel");
     const mcTop10Body = document.getElementById("mcTop10Body");
     const mcStatus = document.getElementById("mcStatus");
     const moversBody = document.getElementById("moversBody");
@@ -1554,196 +1484,6 @@
       }
     }
 
-        setNeedle(null);
-      }
-    }
-
-    // ── SPARKLINE helper ─────────────────────────────────────────────────────
-    function drawSparkline(svgEl, values, color){
-      if(!svgEl || !values || values.length < 2) return;
-      const W = svgEl.clientWidth || 220;
-      const H = 36;
-      const mn = Math.min(...values), mx = Math.max(...values);
-      const range = mx - mn || 1;
-      const pts = values.map((v,i)=>{
-        const x = (i/(values.length-1))*W;
-        const y = H - 4 - ((v-mn)/range)*(H-8);
-        return x+","+y;
-      }).join(" ");
-      svgEl.innerHTML =
-        '<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<circle cx="'+(W)+'" cy="'+(H-4-((values[values.length-1]-mn)/range)*(H-8))+'" r="3" fill="'+color+'"/>';
-    }
-
-    // ── BTC DOMINANTIE sparkline 7d ──────────────────────────────────────────
-    async function refreshDomSpark(){
-      try{
-        // CoinCap geeft history per asset; BTC marketcap / total mcap = dominance
-        const [btcH, totalH] = await Promise.all([
-          fetchJson(COINCAP + "/assets/bitcoin/history?interval=d1&limit=8", 9000),
-          fetchJson(COINCAP + "/assets?limit=5", 9000)
-        ]);
-        const btcPts = btcH?.data || [];
-        // Voor dominance pakken we huidige BTC mcap / total en extrapoleren via BTC prijs ratio
-        const btcPrices = btcPts.map(p=>n(p.priceUsd)).filter(v=>v!==null);
-        if(btcPrices.length < 2) return;
-        // Gebruik relatieve BTC prijs als proxy voor dominance trend
-        // Echte dominance 7d: gebruik global history
-        const gH = await fetchJson(COINCAP + "/assets?limit=50", 9000);
-        const assets = gH?.data || [];
-        const totalMcap = assets.reduce((s,a)=>s+(n(a.marketCapUsd)||0),0);
-        const btcMcap = n(assets.find(a=>a.id==="bitcoin")?.marketCapUsd)||0;
-        const curDom = totalMcap > 0 ? (btcMcap/totalMcap*100) : null;
-
-        // Bouw 7-daagse dominance via BTC history + stable total estimate
-        const domValues = btcPrices.map((p,i)=>{
-          const ratio = p / btcPrices[btcPrices.length-1];
-          return curDom ? curDom * ratio : null;
-        }).filter(v=>v!==null);
-
-        drawSparkline(domSparkSvg, domValues, "#f7931a");
-        if(domSparkStatus && curDom) domSparkStatus.textContent = curDom.toFixed(1)+"% nu";
-      }catch(e){ if(domSparkStatus) domSparkStatus.textContent = "n/b"; }
-    }
-
-    // ── CRYPTO F&G trend 7d ──────────────────────────────────────────────────
-    async function refreshFngSpark(){
-      try{
-        const j = await fetchJson("https://api.alternative.me/fng/?limit=8&format=json", 9000);
-        const pts = (j?.data||[]).map(d=>n(d.value)).filter(v=>v!==null).reverse();
-        if(pts.length < 2) return;
-        drawSparkline(fngSparkSvg, pts, "#a78bfa");
-        const first = pts[0], last = pts[pts.length-1];
-        const diff = last - first;
-        if(fngTrendArrow){
-          fngTrendArrow.textContent = diff > 2 ? "↑" : diff < -2 ? "↓" : "→";
-          fngTrendArrow.style.color = diff > 2 ? "var(--pos)" : diff < -2 ? "var(--neg)" : "var(--muted)";
-        }
-        if(fngTrendLabel){
-          const lbl = diff > 2 ? "sentiment verbetert" : diff < -2 ? "sentiment verslechtert" : "sentiment stabiel";
-          fngTrendLabel.textContent = lbl + " (" + (diff>0?"+":"") + diff.toFixed(0) + " in 7d)";
-        }
-      }catch(e){ if(fngTrendLabel) fngTrendLabel.textContent = "n/b"; }
-    }
-
-    // ── BTC CORRELATIE top 5 (1h moves) ─────────────────────────────────────
-    function refreshCorrelation(){
-      if(!corrBody) return;
-      const btcP1 = pctChange("BTCUSDT", 60);
-      if(btcP1 === null){ corrBody.innerHTML = '<span style="color:var(--muted);font-size:10px;">Wacht op 1u data…</span>'; return; }
-      const CORR_SYMS = ["ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT","AVAXUSDT","LINKUSDT","ADAUSDT","DOTUSDT"];
-      const rows = CORR_SYMS.map(sym=>{
-        const p1 = pctChange(sym, 60);
-        if(p1 === null) return null;
-        const diff = p1 - btcP1;
-        return {sym: sym.replace("USDT",""), p1, diff};
-      }).filter(Boolean).sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff));
-      // Top 5 meest afwijkend van BTC = meest interessant
-      const top5 = rows.slice(0,5);
-      corrBody.innerHTML = top5.map(r=>{
-        const cls = r.p1>=0?"pos":"neg";
-        const diffStr = (r.diff>=0?"+":"")+r.diff.toFixed(2)+"%";
-        const diffCls = r.diff>=0?"pos":"neg";
-        return '<div class="corrChip">' +
-          '<span class="corrSym">'+r.sym+'</span>' +
-          '<span class="corrVal '+cls+'">'+(r.p1>=0?"+":"")+r.p1.toFixed(2)+'%</span>' +
-          '<span style="font-size:9px;color:var(--muted);">vs BTC: <span class="'+diffCls+'">'+diffStr+'</span></span>' +
-        '</div>';
-      }).join("");
-      if(corrStatus) corrStatus.textContent = new Date().toLocaleTimeString();
-    }
-
-    // ── SECTOR PERFORMANCE ───────────────────────────────────────────────────
-    const SECTORS = {
-      "L1":      ["SOLUSDT","AVAXUSDT","ADAUSDT","NEARUSDT","APTUSDT","SUIUSDT"],
-      "L2":      ["MATICUSDT","ARBUSDT","OPUSDT","IMXUSDT"],
-      "DeFi":    ["LINKUSDT","INJUSDT","RNDRUSDT"],
-      "Gaming":  ["GALAUSDT","IMXUSDT","SUIUSDT"],
-    };
-    function refreshSectors(){
-      if(!sectorBody) return;
-      const btc24 = pctChange("BTCUSDT",1440)||0;
-      sectorBody.innerHTML = Object.entries(SECTORS).map(([name, syms])=>{
-        const pcts = syms.map(s=>pctChange(s,1440)).filter(v=>v!==null);
-        if(pcts.length===0) return '<div class="sectorTile"><div class="sectorName">'+name+'</div><div class="sectorPct" style="color:var(--muted)">n/b</div></div>';
-        const avg = pcts.reduce((a,b)=>a+b,0)/pcts.length;
-        const vs = avg - btc24;
-        const cls = avg>=0?"pos":"neg";
-        const vsCls = vs>=0?"pos":"neg";
-        return '<div class="sectorTile">' +
-          '<div class="sectorName">'+name+'</div>' +
-          '<div class="sectorPct '+cls+'">'+(avg>=0?"+":"")+avg.toFixed(1)+'%</div>' +
-          '<div class="sectorCoins" style="color:var(--muted)">vs BTC: <span class="'+vsCls+'">'+(vs>=0?"+":"")+vs.toFixed(1)+'%</span></div>' +
-        '</div>';
-      }).join("");
-      if(sectorStatus) sectorStatus.textContent = new Date().toLocaleTimeString();
-    }
-
-    // ── STABLECOIN FLOWS ─────────────────────────────────────────────────────
-    async function refreshStableFlows(){
-      if(!stableBody) return;
-      try{
-        const coins = ["tether","usd-coin","dai"];
-        const syms  = ["USDT","USDC","DAI"];
-        const results = await Promise.all(coins.map(id=>
-          fetchJson(COINCAP+"/assets/"+id, 9000).catch(()=>null)
-        ));
-        stableBody.innerHTML = results.map((j,i)=>{
-          const d = j?.data;
-          if(!d) return '<div class="stableTile"><div class="stableSym">'+syms[i]+'</div><div class="stableMcap" style="color:var(--muted)">n/b</div></div>';
-          const mcap = n(d.marketCapUsd);
-          const chg24 = n(d.changePercent24Hr);
-          // Positieve change = mcap groeit = meer stables = bullish
-          const flowDir = chg24===null?"":chg24>0.1?"🟢 instroom":chg24<-0.1?"🔴 uitstroom":"➡ stabiel";
-          const cls = chg24===null?"":chg24>0.1?"pos":chg24<-0.1?"neg":"";
-          return '<div class="stableTile">' +
-            '<div class="stableSym">'+syms[i]+'</div>' +
-            '<div class="stableMcap">'+(mcap?"$"+fmtCap(mcap):"—")+'</div>' +
-            '<div class="stableFlow '+cls+'">'+(chg24!==null?(chg24>=0?"+":"")+chg24.toFixed(2)+"% ":"")+'<span style="font-size:9px;">'+flowDir+'</span></div>' +
-          '</div>';
-        }).join("");
-        if(stableStatus) stableStatus.textContent = new Date().toLocaleTimeString();
-      }catch(e){ if(stableBody) stableBody.innerHTML = '<span style="color:var(--muted);font-size:10px;">n/b</span>'; }
-    }
-
-    // ── BTC LIQUIDATIE NIVEAUS ───────────────────────────────────────────────
-    // Synthetische liquidatieniveaus op basis van ronde prijsniveaus ± BTC prijs
-    // Coinglass publieke API heeft CORS-restrictie — we berekenen zelf key levels
-    function refreshLiqLevels(){
-      if(!liqBody) return;
-      const btcPrice = n(document.getElementById("bsPrice")?.textContent?.replace(/[^0-9.]/g,""));
-      if(!btcPrice){ liqBody.innerHTML = '<span style="color:var(--muted);font-size:10px;">Wacht op BTC prijs…</span>'; return; }
-
-      // Genereer key liquidatieniveaus: ronde $1K-niveaus boven en onder
-      const levels = [];
-      const step = 1000;
-      for(let i=1; i<=5; i++){
-        const above = Math.round((btcPrice + i*step)/step)*step;
-        const below = Math.round((btcPrice - i*step)/step)*step;
-        levels.push({price: above, side:"SHORT", dist: ((above-btcPrice)/btcPrice*100) });
-        levels.push({price: below, side:"LONG",  dist: ((btcPrice-below)/btcPrice*100) });
-      }
-      levels.sort((a,b)=>Math.abs(a.dist)-Math.abs(b.dist));
-      const top6 = levels.slice(0,6);
-      const maxDist = Math.max(...top6.map(l=>l.dist));
-
-      liqBody.innerHTML = '<div style="display:flex;gap:4px;margin-bottom:4px;">' +
-        '<span style="font-size:9px;color:var(--muted);flex:1;text-align:center;">SHORT liquidaties (boven)</span>' +
-        '<span style="font-size:9px;color:var(--muted);flex:1;text-align:center;">LONG liquidaties (onder)</span>' +
-      '</div>' +
-      top6.map(l=>{
-        const w = Math.max(8, (l.dist/maxDist*100)).toFixed(0);
-        const col = l.side==="SHORT" ? "#ef4444" : "#22c55e";
-        const priceFmt = "$"+Math.round(l.price).toLocaleString();
-        return '<div class="liqRow">' +
-          '<div class="liqLevel" style="color:'+col+';">'+priceFmt+'</div>' +
-          '<div class="liqBarWrap"><div class="liqBarFill" style="width:'+w+'%;background:'+col+';opacity:.7;"></div></div>' +
-          '<div class="liqAmt" style="color:'+col+';">'+l.side+' '+l.dist.toFixed(1)+'%</div>' +
-        '</div>';
-      }).join("");
-      if(liqStatus) liqStatus.textContent = new Date().toLocaleTimeString();
-    }
-
     async function init(){
       try{
         dbgOk("init…");
@@ -1787,20 +1527,6 @@
         setInterval(refreshCnnFng, 15*60*1000);
         setInterval(refreshAlerts, 15*1000);
         setInterval(refreshEconCalendar, 60*60*1000);
-
-        // Nieuwe secties
-        refreshDomSpark();
-        refreshFngSpark();
-        refreshStableFlows();
-        refreshLiqLevels();
-        // Correlatie en sector starten zodra WS data beschikbaar is (30s delay)
-        setTimeout(()=>{ refreshCorrelation(); refreshSectors(); }, 30*1000);
-        setInterval(refreshCorrelation, 60*1000);
-        setInterval(refreshSectors, 60*1000);
-        setInterval(refreshStableFlows, 5*60*1000);
-        setInterval(refreshLiqLevels, 30*1000);
-        setInterval(refreshDomSpark, 60*60*1000);
-        setInterval(refreshFngSpark, 5*60*1000);
 
         dbgOk("ready");
       }catch(e){
