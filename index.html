@@ -901,9 +901,6 @@
                 } else if(chg <= -0.05){
                   arrowEl.textContent = "▼"; arrowEl.style.color = "var(--neg)";
                 }
-                // Fade pijl na 4 seconden terug naar leeg
-                clearTimeout(arrowEl._fadeTimer);
-                arrowEl._fadeTimer = setTimeout(()=>{ arrowEl.textContent = ""; }, 4000);
               }
               prevBsPrice = price;
             }
