@@ -299,7 +299,7 @@
               <span class="btcPair">BTC/USD</span>
               <div class="btcSub" id="bsStatus">laden…</div>
             </div>
-            <div class="btcPrice" id="bsPrice">…</div>
+            <div style="display:flex;align-items:baseline;gap:4px;"><div class="btcPrice" id="bsPrice">…</div><span id="bsPriceArrow" style="font-size:16px;font-weight:900;line-height:1;transition:opacity .3s;min-width:14px;"></span></div>
           </div>
           <div class="btcPctGrid">
             <div class="miniTile"><div class="miniLbl">1h</div><div class="miniVal" id="bs1">…</div></div>
@@ -722,6 +722,7 @@
     const bn24 = new Map();
     const closes = new Map();
     const whales = [];
+    let prevBsPrice = null;  // voor richting-pijl
 
     function pushClose(sym, tMs, close){
       const arr = closes.get(sym) || [];
@@ -888,6 +889,24 @@
           if(price !== null && qty !== null){
             const quote = price * qty;
             if(quote >= WHALE_TRADE_USDT) addWhale(sym, quote, price, isBuyerMaker ? "SELL" : "BUY", "Binance");
+          }
+          // Live BTC pijl via aggTrade (elke trade)
+          if(sym === "BTCUSDT" && price !== null){
+            const arrowEl = document.getElementById("bsPriceArrow");
+            if(arrowEl){
+              if(prevBsPrice !== null){
+                const chg = (price - prevBsPrice) / prevBsPrice * 100;
+                if(chg >= 0.05){
+                  arrowEl.textContent = "▲"; arrowEl.style.color = "var(--pos)";
+                } else if(chg <= -0.05){
+                  arrowEl.textContent = "▼"; arrowEl.style.color = "var(--neg)";
+                }
+                // Fade pijl na 4 seconden terug naar leeg
+                clearTimeout(arrowEl._fadeTimer);
+                arrowEl._fadeTimer = setTimeout(()=>{ arrowEl.textContent = ""; }, 4000);
+              }
+              prevBsPrice = price;
+            }
           }
           return;
         }
@@ -1129,6 +1148,22 @@
         if(last !== null && open24 !== null && open24 > 0) p24 = ((last - open24) / open24) * 100;
 
         bsPrice.textContent = last !== null ? fmtPrice(last, "USD") : "—";
+
+        // Richting-pijl: vergelijk met vorige prijs, toon bij ≥0.05% beweging
+        const arrowEl = document.getElementById("bsPriceArrow");
+        if(arrowEl && last !== null && prevBsPrice !== null){
+          const chg = (last - prevBsPrice) / prevBsPrice * 100;
+          if(chg >= 0.05){
+            arrowEl.textContent = "▲";
+            arrowEl.style.color = "var(--pos)";
+          } else if(chg <= -0.05){
+            arrowEl.textContent = "▼";
+            arrowEl.style.color = "var(--neg)";
+          } else {
+            arrowEl.textContent = "";
+          }
+        }
+        if(last !== null) prevBsPrice = last;
         bs24.textContent = fmtPct(p24); bs24.className = "miniVal " + clsPct(p24);
 
         // 1h en 4h via kline cache
